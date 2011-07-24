@@ -42,6 +42,7 @@ struct SceneConfig
            int rez_y;
            int spacing;
            int ffcount;
+           int ffbase;
 };
 
 class Thingy

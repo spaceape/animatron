@@ -73,7 +73,7 @@ void   Scene::reset(SceneConfig& config)
        screen.setWidth(64);
        screen.setHeight(48);
        space = 1;
-       base  = 16;
+       base  = config.ffbase;
 
        cell.setWidth(width / screen.width() - space);
        cell.setHeight(height / screen.height() - space);
@@ -90,7 +90,7 @@ void   Scene::reset(SceneConfig& config)
 
        while(x != count)
        {
-             fireflies[x]->reset();
+             fireflies[x++]->reset();
        }
 
        while(count < config.ffcount)
@@ -100,7 +100,7 @@ void   Scene::reset(SceneConfig& config)
 
        while(count > config.ffcount)
        {
-             delete fireflies[count--];
+             delete fireflies[--count];
        }
 
    if (cell.width() + cell.height() >= 12)

@@ -56,24 +56,23 @@ void   Animatron:: init(const KConfigGroup& config)
        mSceneConfig.rez_y = config.readEntry("yrez", 48);
        mSceneConfig.spacing = 0;
        mSceneConfig.ffcount = config.readEntry("count", 8);
+       mSceneConfig.ffbase = config.readEntry("base", 16);
+       ctextcolor = config.readEntry("color", QColor::fromRgb(24, 255, 0));
+       ctextfont = config.readEntry("font", QFont("Courier", 8));
 
-//        ctextcolor = config.readEntry("color", QColor::fromRgb(24, 255, 0));
-//        ctextfont = config.readEntry("font", QFont("Courier", 8));
-       ctextcolor = QColor::fromRgb(24, 255, 0);
-       ctextfont = QFont("Courier", 8);
-       crefresh = config.readEntry("refresh", 25);
+     //crefresh = config.readEntry("refresh", 25);
+       crefresh = 25;
 
        scenedt  = 1.0f / (float)crefresh;
        sceners  = true;
 
    if (!pTimer)
    {
-       mScene.reset(mSceneConfig);
-
        pTimer = new QTimer(this);
        connect(pTimer, SIGNAL(timeout()), this, SLOT(sync()));
    }
 
+       mScene.reset(mSceneConfig);
        pTimer->setInterval(1000 * scenedt);
        pTimer->start();
 
@@ -83,12 +82,14 @@ void   Animatron:: init(const KConfigGroup& config)
 void   Animatron:: save(KConfigGroup& config)
 {
        fprintf(stderr, "Plugin saving...\n");
+       pTimer->stop();
 
        config.writeEntry("xrex", mSceneConfig.rez_x);
        config.writeEntry("yrez", mSceneConfig.rez_y);
        config.writeEntry("count", mSceneConfig.ffcount);
-/*       config.writeEntry("font", blah);
-       config.writeEntry("color", blah);*/
+       config.writeEntry("base", mSceneConfig.ffbase);
+       config.writeEntry("font", ctextfont);
+       config.writeEntry("color", ctextcolor);
        config.writeEntry("refresh", crefresh);
 }
 
@@ -99,19 +100,19 @@ QWidget* Animatron::createConfigurationInterface(QWidget* parent)
 
        mConfigUi.FontChooser->setFont(ctextfont);
        mConfigUi.ColorBtn->setColor(ctextcolor);
-       mConfigUi.RefreshCombo->setValue(crefresh);
+     //mConfigUi.RefreshCombo->setValue(crefresh);
        mConfigUi.WidthSpinner->setValue(mSceneConfig.rez_x);
        mConfigUi.HeightSpinner->setValue(mSceneConfig.rez_y);
        mConfigUi.CountSpinner->setValue(mSceneConfig.ffcount);
-       mConfigUi.BaseCombo->setCompletedText("16");
+       mConfigUi.BaseCombo->setEditText(QString::number(mSceneConfig.ffbase));
 
-       //connect(mConfigUi.FontChooser, SIGNAL(fontSelected(QFont))), this, SLOT(update()));
-       //connect(mConfigUi.ColorBtn, SIGNAL(changed(QColor))), this, SLOT(update()));
-       //connect(mConfigUi.RefreshCombo, SIGNAL(valueChanged(int))), this, SLOT(update()));
-       //connect(mConfigUi.WidthSpinner, SIGNAL(valueChanged(int))), this, SLOT(update()));
-       //connect(mConfigUi.HeightSpinner, SIGNAL(valueChanged(int))), this, SLOT(update()));
-       //connect(mConfigUi.CountSpinner, SIGNAL(valueChanged(int))), this, SLOT(update()));
-       //connect(mConfigUi.BaseCombo, SIGNAL(currentIndexChanged(int))), this, SLOT(update()));
+       connect(mConfigUi.FontChooser, SIGNAL(fontSelected(QFont)), this, SLOT(modified()));
+       connect(mConfigUi.ColorBtn, SIGNAL(changed(QColor)), this, SLOT(modified()));
+       connect(mConfigUi.RefreshCombo, SIGNAL(valueChanged(int)), this, SLOT(modified()));
+       connect(mConfigUi.WidthSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
+       connect(mConfigUi.HeightSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
+       connect(mConfigUi.CountSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
+       connect(mConfigUi.BaseCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(modified()));
 
        connect(this, SIGNAL(settingsChanged(bool)), parent, SLOT(settingsChanged(bool)));
        return cw;
@@ -119,8 +120,13 @@ QWidget* Animatron::createConfigurationInterface(QWidget* parent)
 
 void   Animatron::modified()
 {
-       //sceneupdate |= true;
-       //accept settings
+       ctextfont = mConfigUi.FontChooser->font();
+       ctextcolor = mConfigUi.ColorBtn->color();
+     //crefresh = mConfigUi.RefreshCombo->text().toInt();
+       mSceneConfig.rez_x = mConfigUi.WidthSpinner->value();
+       mSceneConfig.rez_y = mConfigUi.HeightSpinner->value();
+       mSceneConfig.ffcount = mConfigUi.CountSpinner->value();
+       mSceneConfig.ffbase = mConfigUi.BaseCombo->currentText().toInt();
 
        emit(settingsChanged(true));
        sceners |= true;
