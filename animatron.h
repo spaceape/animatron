@@ -29,6 +29,8 @@
 
 #include <Plasma/Wallpaper>
 #include <QtCore/QTimer>
+#include <QtGui/QImage>
+#include <KFileDialog>
 #include "ui_config.h"
 #include "fireflies.h"
 using namespace std;
@@ -43,6 +45,7 @@ class Animatron: public Plasma::Wallpaper
 
            QColor   ctextcolor;
            QFont    ctextfont;
+           QString  cstyle;
            int      crefresh;
            QSizeF   msize;
 
@@ -53,7 +56,10 @@ class Animatron: public Plasma::Wallpaper
          //BackgroundListModel* mmodel;
            Scene    mScene;
            SceneConfig mSceneConfig;
+           QImage   mStyle;
            QTimer*  pTimer;
+           KFileDialog* pOpenDialog;
+           void* pBrowseDialog;
 
            config   mConfigUi;
 
@@ -62,6 +68,12 @@ class Animatron: public Plasma::Wallpaper
 
  public slots:
            void modified();
+           void launchOpenWall();
+           void dialogOpenWallOkay();
+           void dialogOpenWallDone();
+           void launchBrowseWall();
+           void dialogBrowseWallOkay();
+           void dialogBrowseWallDone();
            void sync();
 
  public:

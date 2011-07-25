@@ -25,9 +25,8 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "animatron.h"
-#include <QPainter>
-#include <QFontMetrics>
-#include <QSizeF>
+#include <QtGui/QPainter>
+#include <QtGui/QFontMetrics>
 
        Animatron:: Animatron(QObject* parent, const QVariantList& args)
        :Plasma::Wallpaper(parent, args)
@@ -39,6 +38,8 @@
        sceneupdate = false;
 
        pTimer = NULL;
+       pOpenDialog = NULL;
+       pBrowseDialog = NULL;
 }
 
 
@@ -59,6 +60,7 @@ void   Animatron:: init(const KConfigGroup& config)
        mSceneConfig.ffbase = config.readEntry("base", 16);
        ctextcolor = config.readEntry("color", QColor::fromRgb(24, 255, 0));
        ctextfont = config.readEntry("font", QFont("Courier", 8));
+       cstyle = config.readEntry("style");
 
      //crefresh = config.readEntry("refresh", 25);
        crefresh = 25;
@@ -70,6 +72,11 @@ void   Animatron:: init(const KConfigGroup& config)
    {
        pTimer = new QTimer(this);
        connect(pTimer, SIGNAL(timeout()), this, SLOT(sync()));
+   }
+
+   if (!cstyle.isEmpty())
+   {
+       mStyle.load(cstyle);
    }
 
        mScene.reset(mSceneConfig);
@@ -91,6 +98,7 @@ void   Animatron:: save(KConfigGroup& config)
        config.writeEntry("font", ctextfont);
        config.writeEntry("color", ctextcolor);
        config.writeEntry("refresh", crefresh);
+       config.writeEntry("style", cstyle);
 }
 
 QWidget* Animatron::createConfigurationInterface(QWidget* parent)
@@ -113,7 +121,7 @@ QWidget* Animatron::createConfigurationInterface(QWidget* parent)
        connect(mConfigUi.HeightSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
        connect(mConfigUi.CountSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
        connect(mConfigUi.BaseCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(modified()));
-
+       connect(mConfigUi.OpenWallBtn, SIGNAL(clicked()), this, SLOT(launchOpenWall()));
        connect(this, SIGNAL(settingsChanged(bool)), parent, SLOT(settingsChanged(bool)));
        return cw;
 }
@@ -130,6 +138,58 @@ void   Animatron::modified()
 
        emit(settingsChanged(true));
        sceners |= true;
+}
+
+void   Animatron::launchOpenWall()
+{
+   if (!pOpenDialog)
+   {
+       pOpenDialog = new KFileDialog(KUrl(), QString::fromAscii( "*.png *.jpeg *.jpg *.xcf *.svg *.svgz *.bmp" ), NULL);
+       pOpenDialog->setOperationMode(KFileDialog::Opening);
+       pOpenDialog->setInlinePreviewShown(true);
+       pOpenDialog->setCaption(QString::fromAscii("Select wallpaper image..."));
+       pOpenDialog->setModal(false);
+       connect(pOpenDialog, SIGNAL(okClicked()), this, SLOT(dialogOpenWallOkay()));
+       connect(pOpenDialog, SIGNAL(destroyed(QObject*)), this, SLOT(dialogOpenWallDone()));
+   }
+
+       pOpenDialog->show();
+       pOpenDialog->raise();
+       pOpenDialog->activateWindow();
+
+//     connect(m_dialog, SIGNAL(okClicked()), this, SLOT(browse()));*/
+}
+
+void   Animatron::dialogOpenWallOkay()
+{
+   if (!pOpenDialog)
+       return;
+
+       cstyle = pOpenDialog->selectedFile();
+
+   if (mStyle.load(cstyle))
+       fprintf(stderr, "Image loaded successfuly.\n");
+       else
+       fprintf(stderr, "Failed to load image\n");
+}
+
+void   Animatron::dialogOpenWallDone()
+{
+
+}
+
+void   Animatron::launchBrowseWall()
+{
+}
+
+void   Animatron::dialogBrowseWallOkay()
+{
+
+}
+
+void   Animatron::dialogBrowseWallDone()
+{
+
 }
 
 void   Animatron::sync()
@@ -149,6 +209,8 @@ void   Animatron:: paint(QPainter* painter, const QRectF& exposedRect)
    {
        msize  = boundingRect().size();
    }
+
+       painter->drawImage(0, 0, mStyle);
 
        painter->setPen(ctextcolor);
        painter->setFont(ctextfont);

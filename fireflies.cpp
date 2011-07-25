@@ -242,7 +242,6 @@ void   Cell::explode()
        Cell* c2 = spawn(); c2->setXEvo(-1.0f); c2->setYEvo(0.0f); c2->setLife(CELL_EXPLODE_LIFETIME);
        Cell* c3 = spawn(); c3->setXEvo(0.0f); c3->setYEvo(+1.0f); c3->setLife(CELL_EXPLODE_LIFETIME);
        Cell* c4 = spawn(); c4->setXEvo(0.0f); c4->setYEvo(-1.0f); c4->setLife(CELL_EXPLODE_LIFETIME);
-       printf("----------------------------------------------\n");
 }
 
 bool   Cell::sync(float dt)
@@ -388,7 +387,7 @@ void   Firefly::_notify_cell_created(Cell* pcell)
        tail = pcell;
 
      ++cc;
-       printf("Cells = %d | [%p] life=%.4f\n", cc, pcell, pcell->getLife());
+     //printf("Cells = %d | [%p] life=%.4f\n", cc, pcell, pcell->getLife());
 }
 
 void   Firefly::_notify_cell_expired(Cell* pcell)
@@ -406,7 +405,7 @@ void   Firefly::_notify_cell_expired(Cell* pcell)
        delete pcell;
 
      --cc;
-       printf("Cells = %d\n", cc);
+     //printf("Cells = %d\n", cc);
 }
 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 

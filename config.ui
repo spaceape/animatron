@@ -316,7 +316,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="NeWallBtn">
+      <widget class="QPushButton" name="BrowseWallBtn">
        <property name="toolTip">
         <string>Download new wallpapers</string>
        </property>
