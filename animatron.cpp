@@ -210,6 +210,8 @@ void   Animatron:: paint(QPainter* painter, const QRectF& exposedRect)
        mScene.reset(mSceneConfig);
    }
 
+       painter->setClipRect(boundingRect());
+
      //blit the background (saves all the per-pixel-products that blending does)
        painter->setCompositionMode(QPainter::CompositionMode_Source);
 
