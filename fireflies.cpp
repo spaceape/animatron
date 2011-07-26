@@ -131,8 +131,7 @@ void   Scene::render(QPainter* dev)
 {
    if (enabled)
    {
-       dev->fillRect(QRect(0, 0, width, height), Qt::black);
-       //save();
+       //dev->save();
 
        int x = 0;
 
@@ -140,7 +139,8 @@ void   Scene::render(QPainter* dev)
        {
              fireflies[x++]->render(dev);
        }
-       //restore();
+
+       //dev->restore();
    }
 
        resync = false;

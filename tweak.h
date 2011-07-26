@@ -29,7 +29,7 @@
 #include <cstdlib>
 #include <ctime>
 
-#define TIME_RECYCLE 2.0f
+#define TIME_RECYCLE rndfloat(3.25f, 1.75f, 0.0f)
 
 #define CELL_MAX_LIFETIME 5.0f
 #define CELL_EXPLODE_LIFETIME rndfloat(0.5f, 0.25f, 0.0f)

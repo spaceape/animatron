@@ -136,7 +136,7 @@ void   Animatron::modified()
        mSceneConfig.ffcount = mConfigUi.CountSpinner->value();
        mSceneConfig.ffbase = mConfigUi.BaseCombo->currentText().toInt();
 
-       emit(settingsChanged(true));
+       emit settingsChanged(true);
        sceners |= true;
 }
 
@@ -156,8 +156,6 @@ void   Animatron::launchOpenWall()
        pOpenDialog->show();
        pOpenDialog->raise();
        pOpenDialog->activateWindow();
-
-//     connect(m_dialog, SIGNAL(okClicked()), this, SLOT(browse()));*/
 }
 
 void   Animatron::dialogOpenWallOkay()
@@ -171,6 +169,8 @@ void   Animatron::dialogOpenWallOkay()
        fprintf(stderr, "Image loaded successfuly.\n");
        else
        fprintf(stderr, "Failed to load image\n");
+
+       emit settingsChanged(true);
 }
 
 void   Animatron::dialogOpenWallDone()
@@ -196,21 +196,28 @@ void   Animatron::sync()
 {
   if  (sceners |= mScene.sync(scenedt))
   {
-       update(boundingRect());
+       emit( update(boundingRect()) );
   }
 }
 
 void   Animatron:: paint(QPainter* painter, const QRectF& exposedRect)
 {
-//    if (!sceners)
-//        return;
-
    if (msize != boundingRect().size())
    {
        msize  = boundingRect().size();
+       mSceneConfig.width = msize.width();
+       mSceneConfig.height = msize.height();
+       mScene.reset(mSceneConfig);
    }
 
-       painter->drawImage(0, 0, mStyle);
+     //blit the background (saves all the per-pixel-products that blending does)
+       painter->setCompositionMode(QPainter::CompositionMode_Source);
+
+   if (mStyle.width() < boundingRect().width() || mStyle.height() < boundingRect().height())
+       painter->fillRect(exposedRect, Qt::black);
+
+   if (!mStyle.isNull())
+       painter->drawImage((boundingRect().width() - mStyle.width()) / 2, (boundingRect().height() - mStyle.height()) / 2, mStyle);
 
        painter->setPen(ctextcolor);
        painter->setFont(ctextfont);
