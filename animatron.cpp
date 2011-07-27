@@ -113,6 +113,7 @@ QWidget* Animatron::createConfigurationInterface(QWidget* parent)
        mConfigUi.HeightSpinner->setValue(mSceneConfig.rez_y);
        mConfigUi.CountSpinner->setValue(mSceneConfig.ffcount);
        mConfigUi.BaseCombo->setEditText(QString::number(mSceneConfig.ffbase));
+       mConfigUi.UrlEdit->setText(cstyle);
 
        connect(mConfigUi.FontChooser, SIGNAL(fontSelected(QFont)), this, SLOT(modified()));
        connect(mConfigUi.ColorBtn, SIGNAL(changed(QColor)), this, SLOT(modified()));
@@ -122,6 +123,7 @@ QWidget* Animatron::createConfigurationInterface(QWidget* parent)
        connect(mConfigUi.CountSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
        connect(mConfigUi.BaseCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(modified()));
        connect(mConfigUi.OpenWallBtn, SIGNAL(clicked()), this, SLOT(launchOpenWall()));
+       connect(mConfigUi.ClearWallBtn, SIGNAL(clicked()), this, SLOT(clearWall()));
        connect(this, SIGNAL(settingsChanged(bool)), parent, SLOT(settingsChanged(bool)));
        return cw;
 }
@@ -164,6 +166,7 @@ void   Animatron::dialogOpenWallOkay()
        return;
 
        cstyle = pOpenDialog->selectedFile();
+       mConfigUi.UrlEdit->setText(cstyle);
 
    if (mStyle.load(cstyle))
        fprintf(stderr, "Image loaded successfuly.\n");
@@ -191,6 +194,16 @@ void   Animatron::dialogBrowseWallDone()
 {
 
 }
+
+void   Animatron::clearWall()
+{
+       cstyle = "";
+       mStyle = QImage();
+       mConfigUi.UrlEdit->setText(cstyle);
+
+       emit settingsChanged(true);
+}
+
 
 void   Animatron::sync()
 {

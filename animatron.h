@@ -74,6 +74,7 @@ class Animatron: public Plasma::Wallpaper
            void launchBrowseWall();
            void dialogBrowseWallOkay();
            void dialogBrowseWallDone();
+           void clearWall();
            void sync();
 
  public:
