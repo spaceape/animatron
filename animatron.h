@@ -28,20 +28,28 @@
 #define ANIMATRON_HEADER
 
 #include <Plasma/Wallpaper>
-#include <QtCore/QTimer>
-#include <QtGui/QImage>
+#include <QTimer>
+#include <QImage>
+#include <QtDBus>
 #include <KFileDialog>
-#include "ui_config.h"
+#include "dbusettings.h"
 #include "fireflies.h"
+#include "ui_config.h"
 using namespace std;
 using namespace Ui;
 
 
 class QSizeF;
 
+//org.kde.screensaver Screensaver/
+//org.kde.krunner
+//org.freedesktop.upower
+
 class Animatron: public Plasma::Wallpaper
 {
            Q_OBJECT
+
+           QDBusConnection bus;
 
            QColor   ctextcolor;
            QFont    ctextfont;
@@ -52,6 +60,7 @@ class Animatron: public Plasma::Wallpaper
            float    scenedt;
            bool     sceners;
            bool     sceneupdate;
+           bool     ready;
 
          //BackgroundListModel* mmodel;
            Scene    mScene;
@@ -63,10 +72,7 @@ class Animatron: public Plasma::Wallpaper
 
            config   mConfigUi;
 
- protected:
- virtual   void init(const KConfigGroup& config);
-
- public slots:
+ private slots:
            void modified();
            void launchOpenWall();
            void dialogOpenWallOkay();
@@ -75,6 +81,14 @@ class Animatron: public Plasma::Wallpaper
            void dialogBrowseWallOkay();
            void dialogBrowseWallDone();
            void sync();
+
+           void suspend(bool);
+ signals:
+           void settingsChanged(bool modified);
+
+ protected:
+ virtual   void init(const KConfigGroup& config);
+
 
  public:
            Animatron(QObject* parent, const QVariantList& args);
@@ -85,7 +99,12 @@ class Animatron: public Plasma::Wallpaper
  virtual   void paint(QPainter* painter, const QRectF& exposedRect);
 
  signals:
-           void settingsChanged(bool modified);
+           void statusupdate(bool);
+
+ public slots:
+           bool freeze();
+           bool unfreeze();
+           bool getstatus();
 };
 
 K_EXPORT_PLASMA_WALLPAPER(animatron, Animatron)

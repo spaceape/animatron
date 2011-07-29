@@ -51,6 +51,8 @@ class Thingy
  static    const uint DETAIL_SKEL = 0;
  static    const uint DETAIL_FULL = 1;
 
+ static    const uint ENA_ALL = 0xffffffff;
+ static    const uint ENA_SPAWNING = 1;
  public:
  virtual   bool sync(float dt) = 0;
  virtual   void render(QPainter* dev) = 0;
@@ -62,6 +64,7 @@ class Thingy
  static    int   space;
  static    uint  detail;
  static    uint  base;
+ static    uint  lock;
 };
 
 class Cell;
@@ -87,6 +90,8 @@ class Scene :public Thingy
            Scene();
  virtual   ~Scene();
            void reset(SceneConfig& config);
+           uint getLockFlags();
+           void setLockFlags(uint);
 
            bool sync(float dt);
            void render(QPainter* dev);
@@ -98,10 +103,10 @@ class Cell :public Thingy
            QPoint position;
            QPoint evolution;
            float life;
-
            float lifetime;
            char* symbol;
 
+           bool  resync;
  private:
            void initialize(int px, int py, char* const psym);
            void dispose();

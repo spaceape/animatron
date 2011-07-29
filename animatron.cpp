@@ -29,22 +29,35 @@
 #include <QtGui/QFontMetrics>
 
        Animatron:: Animatron(QObject* parent, const QVariantList& args)
-       :Plasma::Wallpaper(parent, args)
+       :Plasma::Wallpaper(parent, args),
+        bus(QDBusConnection::sessionBus())
 {
        fprintf(stderr, "Plugin starting...\n");
 
        scenedt = 0.04f;
        sceners = false;
        sceneupdate = false;
+       ready = true;
 
        pTimer = NULL;
        pOpenDialog = NULL;
        pBrowseDialog = NULL;
+
+   if (!bus.registerService(DBUS_DOM))
+   {   fprintf(stderr, "Could not register service \'%s\'\n", DBUS_DOM);
+       throw 1;
+   }
+
+       bus.registerObject(DBUS_ORG, this, QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals);
+       bus.connect("org.freedesktop.ScreenSaver", "/ScreenSaver", "org.freedesktop.ScreenSaver", "ActiveChanged", this, SLOT( suspend(bool) ));
+//        bus.connect("org.freedesktop.PowerManagement", "/org/freedesktop/PowerManagement", "org.freedesktop.PowerManagement", "PowerSaveStatusChanged", this, SLOT( suspend(bool) ));
 }
 
 
        Animatron:: ~Animatron()
-{
+{ 
+       bus.unregisterObject(DBUS_ORG);
+       bus.unregisterService(DBUS_DOM);
        fprintf(stderr, "Plugin finished.\n");
 }
 
@@ -192,6 +205,47 @@ void   Animatron::dialogBrowseWallDone()
 
 }
 
+void   Animatron::suspend(bool value)
+{
+   if (value)
+       freeze();
+       else
+       unfreeze();
+}
+
+bool   Animatron::freeze()
+{
+   if (ready)
+   {
+#ifdef DEBUG
+       printf("FROZEN\n");
+#endif
+       mScene.setLockFlags(0);
+       emit statusupdate(ready = false);
+   }
+
+       return true;
+}
+
+bool   Animatron::unfreeze()
+{
+   if (!ready)
+   {
+#ifdef DEBUG
+       printf("UNFROZEN\n");
+#endif
+       mScene.setLockFlags(Scene::ENA_ALL);
+       emit statusupdate(ready = true);
+   }
+
+       return true;
+}
+
+bool   Animatron::getstatus()
+{
+       return ready;
+}
+
 void   Animatron::sync()
 {
   if  (sceners |= mScene.sync(scenedt))
@@ -210,20 +264,23 @@ void   Animatron:: paint(QPainter* painter, const QRectF& exposedRect)
        mScene.reset(mSceneConfig);
    }
 
-     //blit the background (saves all the per-pixel-products that blending does)
-       painter->setCompositionMode(QPainter::CompositionMode_Source);
+   if (sceners)
+   {
+        //blit the background (saves all the per-pixel-products that blending does)
+          painter->setCompositionMode(QPainter::CompositionMode_Source);
 
-   if (mStyle.width() < boundingRect().width() || mStyle.height() < boundingRect().height())
-       painter->fillRect(exposedRect, Qt::black);
+       if (mStyle.width() < boundingRect().width() || mStyle.height() < boundingRect().height())
+           painter->fillRect(exposedRect, Qt::black);
 
-   if (!mStyle.isNull())
-       painter->drawImage((boundingRect().width() - mStyle.width()) / 2, (boundingRect().height() - mStyle.height()) / 2, mStyle);
+       if (!mStyle.isNull())
+           painter->drawImage((boundingRect().width() - mStyle.width()) / 2, (boundingRect().height() - mStyle.height()) / 2, mStyle);
 
-       painter->setPen(ctextcolor);
-       painter->setFont(ctextfont);
-       mScene.render(painter);
+           painter->setPen(ctextcolor);
+           painter->setFont(ctextfont);
+           mScene.render(painter);
 
-       sceners = false;
+           sceners = false;
+   }
 }
 
 #include "animatron.moc"

@@ -25,17 +25,23 @@
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <cstdio>
+#include <cmath>
 #include "fireflies.h"
 #include "tweak.h"
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
        const uint Thingy::DETAIL_SKEL;
        const uint Thingy::DETAIL_FULL;
+
+       const uint Thingy::ENA_ALL;
+       const uint Thingy::ENA_SPAWNING;
+
        QRect Thingy::bounds;
        QRect Thingy::screen;
        QSize Thingy::cell;
        int  Thingy::space;
        uint  Thingy::detail;
        uint  Thingy::base;
+       uint  Thingy::lock = Thingy::ENA_ALL;
 
 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
@@ -53,6 +59,8 @@
        count = 0;
        resync = false;
        enabled = false;
+
+       lock = ENA_ALL;
        seed();
 }
 
@@ -74,6 +82,7 @@ void   Scene::reset(SceneConfig& config)
        screen.setHeight(48);
        space = 1;
        base  = config.ffbase;
+     //lock  = ENA_ALL;
 
        cell.setWidth(width / screen.width() - space);
        cell.setHeight(height / screen.height() - space);
@@ -110,6 +119,16 @@ void   Scene::reset(SceneConfig& config)
 
        enabled = width > 63 && height >= 47;
        resync = enabled;
+}
+
+uint   Scene::getLockFlags()
+{
+       return lock;
+}
+
+void   Scene::setLockFlags(uint ulock)
+{
+       lock = ulock;
 }
 
 bool   Scene::sync(float dt)
@@ -179,6 +198,7 @@ void   Cell::initialize(int px, int py, char* const psym)
        lifetime = 0.0f;
 
        symbol   = strdup(" ");
+       resync   = true;
 
    if (psym)
        copy(psym);
@@ -246,27 +266,29 @@ void   Cell::explode()
 
 bool   Cell::sync(float dt)
 {
+       resync = false;
        life -= dt;
 
    if (life <= 0.0f)
    {
        parent->_notify_cell_expired(this);
-       return false;
-   }
 
-   int ret = false;
+       return  resync;
+   }
 
    if (screen.contains(position))
    {
        move();
-       ret = true;
+       resync = true;
    }
 
-       return ret;
+       return resync;
 }
 
 void   Cell::render(QPainter* dev)
 {
+   if (resync)
+   {
        QRect r(bounds.left() + position.x() * (cell.width() + space),
                bounds.top() + position.y() * (cell.height() + space),
                cell.width(),
@@ -290,6 +312,7 @@ void   Cell::render(QPainter* dev)
               break;
 
        }
+   }
 }
 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
@@ -327,26 +350,29 @@ void   Firefly::reset()
 
 bool   Firefly::sync(float dt)
 {
-   if (timer == 0.0f)
+   if (lock & ENA_SPAWNING)
    {
-       Cell* c1 = new Cell(this, NULL, CELL_G_LIFETIME);
-             c1->setXEvo(CELL_X_EVO);
-             c1->setYEvo(CELL_Y_EVO);
-
-             c1->setX(rndint(screen.width() / 4, screen.width() / 2, -screen.width() / 4));
-             c1->setY(rndint(screen.height()));
-   }
-
-       timer  += dt;
-
-   if (timer >= TIME_RECYCLE)
-   {
-       if (head)
+       if (timer == 0.0f)
        {
-           head->explode();
+           Cell* c1 = new Cell(this, NULL, CELL_G_LIFETIME);
+                 c1->setXEvo(CELL_X_EVO);
+                 c1->setYEvo(CELL_Y_EVO);
+
+                 c1->setX(rndint(screen.width() / 4, screen.width() / 2, -screen.width() / 4));
+                 c1->setY(rndint(screen.height()));
        }
 
-       timer  = 0.0f;
+           timer  += dt;
+
+       if (timer >= TIME_RECYCLE)
+       {
+           if (head)
+           {
+               head->explode();
+           }
+
+           timer  = 0.0f;
+       }
    }
 
        Cell *current = head, *next;
