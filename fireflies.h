@@ -1,3 +1,5 @@
+#ifndef fireflies_h
+#define firefiles_h
 /*
     Copyright (c) 2011, spaceape [[ spaceape99@gmail.com ]]
     All rights reserved.
@@ -24,8 +26,6 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef FIREFLIES_H
-#define FIREFLIES_H
 #include <cstdlib>
 #include <QtCore/QRect>
 #include <QtGui/QColor>
@@ -92,6 +92,8 @@ class Scene :public Thingy
            void reset(SceneConfig& config);
            uint getLockFlags();
            void setLockFlags(uint);
+           bool getEnabled();
+           void setEnabled(bool);
 
            bool sync(float dt);
            void render(QPainter* dev);

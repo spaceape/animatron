@@ -1,3 +1,5 @@
+#ifndef animatron_h
+#define animatron_h
 /*
     Copyright (c) 2011, spaceape [[ spaceape99@gmail.com ]]
     All rights reserved.
@@ -24,22 +26,27 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef ANIMATRON_HEADER
-#define ANIMATRON_HEADER
-
-#include <Plasma/Wallpaper>
 #include <QTimer>
 #include <QImage>
 #include <QtDBus>
-#include <KFileDialog>
-#include "dbusettings.h"
+#include <Plasma/Wallpaper>
+#include <Plasma/Package>
+
 #include "fireflies.h"
 #include "ui_config.h"
+#include "backgroundlist.h"
 using namespace std;
 using namespace Ui;
 
 
 class QSizeF;
+class KFileDialog;
+namespace KNS3 {
+class DownloadDialog;
+}
+
+#define DBUS_DOM "org.plasmaabuse.animatron"
+#define DBUS_ORG "/"
 
 //org.kde.screensaver Screensaver/
 //org.kde.krunner
@@ -54,45 +61,58 @@ class Animatron: public Plasma::Wallpaper
            QColor   ctextcolor;
            QFont    ctextfont;
            QString  cstyle;
+           int      carrange;
+           QStringList cuserstyles;
            int      crefresh;
            QSizeF   msize;
 
            float    scenedt;
            bool     sceners;
            bool     sceneupdate;
+
+           bool     active;
+           bool     enabled;
            bool     ready;
 
-         //BackgroundListModel* mmodel;
            Scene    mScene;
            SceneConfig mSceneConfig;
            QImage   mStyle;
-           QTimer*  pTimer;
-           KFileDialog* pOpenDialog;
-           void* pBrowseDialog;
-
            config   mConfigUi;
 
- private slots:
-           void modified();
-           void launchOpenWall();
-           void dialogOpenWallOkay();
-           void dialogOpenWallDone();
-           void launchBrowseWall();
-           void dialogBrowseWallOkay();
-           void dialogBrowseWallDone();
-           void sync();
+           QTimer*  pTimer;
+           BackgroundListModel* pImageListModel;
+           KFileDialog* pOpenDialog;
+           KNS3::DownloadDialog* pBrowseDialog;
 
-           void suspend(bool);
  signals:
-           void settingsChanged(bool modified);
+           void SettingsChanged(bool);
+
+ private slots:
+           void wallInsertItem();
+           void wallInsertDialogOkay();
+           void wallInsertDialogDone();
+           void wallBrowseItem();
+           void wallBrowseDialogOkay();
+           void wallBrowseDialogDone();
+           void wallRemoveItem(QString);
+           void wallFetchList();
+           void wallIndexChanged(const QModelIndex&);
+           void wallImageChanged(QString);
+           void wallArrangementChanged(int);
+           void modified();
+
+           void disposeConfigurationInterface();
+           void suspend(bool); //hardlock
+
+           void sync();
 
  protected:
  virtual   void init(const KConfigGroup& config);
 
-
  public:
            Animatron(QObject* parent, const QVariantList& args);
            ~Animatron();
+           void updateScreenshot(QPersistentModelIndex index);
 
  virtual   void save(KConfigGroup& config);
  virtual   QWidget* createConfigurationInterface(QWidget* parent);
@@ -102,10 +122,9 @@ class Animatron: public Plasma::Wallpaper
            void statusupdate(bool);
 
  public slots:
-           bool freeze();
-           bool unfreeze();
+           void freeze();
+           void unfreeze();
            bool getstatus();
 };
 
-K_EXPORT_PLASMA_WALLPAPER(animatron, Animatron)
 #endif

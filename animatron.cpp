@@ -27,6 +27,8 @@
 #include "animatron.h"
 #include <QtGui/QPainter>
 #include <QtGui/QFontMetrics>
+#include <kfiledialog.h>
+#include <knewstuff3/downloaddialog.h>
 
        Animatron:: Animatron(QObject* parent, const QVariantList& args)
        :Plasma::Wallpaper(parent, args),
@@ -34,31 +36,40 @@
 {
        fprintf(stderr, "Plugin starting...\n");
 
-       scenedt = 0.04f;
+       scenedt = 0.0f;
        sceners = false;
        sceneupdate = false;
-       ready = true;
+       active = false;
+       enabled = false;
+       ready = false;
 
        pTimer = NULL;
+       pImageListModel = NULL;
        pOpenDialog = NULL;
        pBrowseDialog = NULL;
 
-   if (!bus.registerService(DBUS_DOM))
-   {   fprintf(stderr, "Could not register service \'%s\'\n", DBUS_DOM);
-       throw 1;
-   }
-
+   if (bus.registerService(DBUS_DOM))
+   {
        bus.registerObject(DBUS_ORG, this, QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals);
        bus.connect("org.freedesktop.ScreenSaver", "/ScreenSaver", "org.freedesktop.ScreenSaver", "ActiveChanged", this, SLOT( suspend(bool) ));
-//        bus.connect("org.freedesktop.PowerManagement", "/org/freedesktop/PowerManagement", "org.freedesktop.PowerManagement", "PowerSaveStatusChanged", this, SLOT( suspend(bool) ));
+     //bus.connect("org.freedesktop.PowerManagement", "/org/freedesktop/PowerManagement", "org.freedesktop.PowerManagement", "PowerSaveStatusChanged", this, SLOT( suspend(bool) ));
+       fprintf(stderr, "Connected to DBUS\n");
+   }
+
+       unfreeze();
 }
 
 
        Animatron:: ~Animatron()
-{ 
+{
        bus.unregisterObject(DBUS_ORG);
        bus.unregisterService(DBUS_DOM);
        fprintf(stderr, "Plugin finished.\n");
+}
+
+void   Animatron::updateScreenshot(QPersistentModelIndex index)
+{
+       mConfigUi.ImageList->update(index);
 }
 
 void   Animatron:: init(const KConfigGroup& config)
@@ -74,8 +85,8 @@ void   Animatron:: init(const KConfigGroup& config)
        ctextcolor = config.readEntry("color", QColor::fromRgb(24, 255, 0));
        ctextfont = config.readEntry("font", QFont("Courier", 8));
        cstyle = config.readEntry("style");
-
-     //crefresh = config.readEntry("refresh", 25);
+       carrange = config.readEntry("arrange", -1);
+       cuserstyles = config.readEntry("userstyles", QStringList());
        crefresh = 25;
 
        scenedt  = 1.0f / (float)crefresh;
@@ -96,6 +107,12 @@ void   Animatron:: init(const KConfigGroup& config)
        pTimer->setInterval(1000 * scenedt);
        pTimer->start();
 
+#ifdef DEBUG
+       fprintf(stderr, "style=`%s` arrange=%d\n", cstyle.toAscii().data(), carrange);
+#endif
+
+       ready = true;
+       emit SettingsChanged(false);
        emit update(boundingRect());
 }
 
@@ -110,50 +127,121 @@ void   Animatron:: save(KConfigGroup& config)
        config.writeEntry("base", mSceneConfig.ffbase);
        config.writeEntry("font", ctextfont);
        config.writeEntry("color", ctextcolor);
-       config.writeEntry("refresh", crefresh);
        config.writeEntry("style", cstyle);
+       config.writeEntry("arrange", carrange);
+       config.writeEntry("userstyles", cuserstyles);
+
+       ready = false;
 }
 
 QWidget* Animatron::createConfigurationInterface(QWidget* parent)
 {
-       QWidget* cw = new QWidget(parent);
-       mConfigUi.setupUi(cw);
+       QWidget* widget = new QWidget(parent);
+       mConfigUi.setupUi(widget);
+       connect(widget, SIGNAL(destroyed(QObject*)), this, SLOT(disposeConfigurationInterface()));
+
+       int  x;
 
        mConfigUi.FontChooser->setFont(ctextfont);
+       connect(mConfigUi.FontChooser, SIGNAL(fontSelected(QFont)), this, SLOT(modified()));
+
        mConfigUi.ColorBtn->setColor(ctextcolor);
+       connect(mConfigUi.ColorBtn, SIGNAL(changed(QColor)), this, SLOT(modified()));
+
      //mConfigUi.RefreshCombo->setValue(crefresh);
+     //connect(mConfigUi.RefreshCombo, SIGNAL(valueChanged(int)), this, SLOT(modified()));
+
        mConfigUi.WidthSpinner->setValue(mSceneConfig.rez_x);
+       connect(mConfigUi.WidthSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
+
        mConfigUi.HeightSpinner->setValue(mSceneConfig.rez_y);
+       connect(mConfigUi.HeightSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
+
        mConfigUi.CountSpinner->setValue(mSceneConfig.ffcount);
+       connect(mConfigUi.CountSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
+
        mConfigUi.BaseCombo->setEditText(QString::number(mSceneConfig.ffbase));
 
-       connect(mConfigUi.FontChooser, SIGNAL(fontSelected(QFont)), this, SLOT(modified()));
-       connect(mConfigUi.ColorBtn, SIGNAL(changed(QColor)), this, SLOT(modified()));
-       connect(mConfigUi.RefreshCombo, SIGNAL(valueChanged(int)), this, SLOT(modified()));
-       connect(mConfigUi.WidthSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
-       connect(mConfigUi.HeightSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
-       connect(mConfigUi.CountSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
+       for (x = 0; x < mConfigUi.BaseCombo->count(); ++x) 
+       {
+            if (mSceneConfig.ffbase == mConfigUi.BaseCombo->itemText(x).toInt())
+            {
+                mConfigUi.BaseCombo->setCurrentIndex(x);
+                break;
+            }
+       }
        connect(mConfigUi.BaseCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(modified()));
-       connect(mConfigUi.OpenWallBtn, SIGNAL(clicked()), this, SLOT(launchOpenWall()));
-       connect(this, SIGNAL(settingsChanged(bool)), parent, SLOT(settingsChanged(bool)));
-       return cw;
+
+       pImageListModel = new BackgroundListModel(this, widget);
+       pImageListModel->setResizeMethod((ResizeMethod)carrange);
+       pImageListModel->setWallpaperSize(boundingRect().size().toSize());
+       pImageListModel->reload(cuserstyles);
+
+       QTimer::singleShot(250, this, SLOT(wallFetchList()));
+       mConfigUi.ImageList->setItemDelegate(new BackgroundDelegate(mConfigUi.ImageList));
+
+//        mConfigUi.ImageList->setMinimumWidth(
+//           (BackgroundDelegate::SCREENSHOT_SIZE + BackgroundDelegate::MARGIN * 2 + BackgroundDelegate::BLUR_INCREMENT) * 3 +
+//            mConfigUi.ImageList->spacing() * 4 + 
+//            QApplication::style()->pixelMetric(QStyle::PM_ScrollBarExtent) + 
+//            QApplication::style()->pixelMetric(QStyle::PM_DefaultFrameWidth) * 2 + 7
+//        );
+
+       mConfigUi.ImageList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+       connect(mConfigUi.ImageList, SIGNAL(clicked(const QModelIndex&)), this, SLOT(modified()));
+
+       mConfigUi.ImageList->setSpacing(2);
+       mConfigUi.ImageList->setViewMode(QListView::IconMode);
+
+       RemoveButtonManager* rbmanager = new RemoveButtonManager(mConfigUi.ImageList, &cuserstyles);
+       connect(rbmanager, SIGNAL(removeClicked(QString)), this, SLOT(wallRemoveItem(QString)));
+
+       //mConfigUi.ArrangementCombo->addItem(i18n("Scaled & Cropped"), ScaledAndCroppedResize);
+       //mConfigUi.ArrangementCombo->addItem(i18n("Scaled"), ScaledResize);
+       //mConfigUi.ArrangementCombo->addItem(i18n("Scaled, keep proportions"), MaxpectResize);
+       mConfigUi.ArrangementCombo->addItem(i18n("Centered"), CenteredResize);
+       //mConfigUi.ArrangementCombo->addItem(i18n("Tiled"), TiledResize);
+       //mConfigUi.ArrangementCombo->addItem(i18n("Center Tiled"), CenterTiledResize);
+       mConfigUi.ArrangementCombo->addItem(i18n("No Background"), 0);
+
+       for (x = 0; x < mConfigUi.ArrangementCombo->count(); ++x) 
+       {
+            if (carrange == mConfigUi.ArrangementCombo->itemData(x).value<int>())
+            {
+                mConfigUi.ArrangementCombo->setCurrentIndex(x);
+                break;
+            }
+       }
+       connect(mConfigUi.ArrangementCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(wallArrangementChanged(int)));
+
+       mConfigUi.OpenWallBtn->setIcon(KIcon("document-open"));
+       connect(mConfigUi.OpenWallBtn, SIGNAL(clicked()), this, SLOT(wallInsertItem()));
+
+       mConfigUi.GetNewWallBtn->setIcon(KIcon("get-hot-new-stuff"));
+       connect(mConfigUi.GetNewWallBtn, SIGNAL(clicked()), this, SLOT(wallBrowseItem()));
+
+       connect(this, SIGNAL(SettingsChanged(bool)), parent, SLOT(settingsChanged(bool)));
+       return widget;
 }
 
-void   Animatron::modified()
+void   Animatron::disposeConfigurationInterface()
 {
-       ctextfont = mConfigUi.FontChooser->font();
-       ctextcolor = mConfigUi.ColorBtn->color();
-     //crefresh = mConfigUi.RefreshCombo->text().toInt();
-       mSceneConfig.rez_x = mConfigUi.WidthSpinner->value();
-       mSceneConfig.rez_y = mConfigUi.HeightSpinner->value();
-       mSceneConfig.ffcount = mConfigUi.CountSpinner->value();
-       mSceneConfig.ffbase = mConfigUi.BaseCombo->currentText().toInt();
+   if (pOpenDialog)
+   {
+       delete pOpenDialog;
+       pOpenDialog = NULL;
+   }
 
-       emit settingsChanged(true);
-       sceners |= true;
+   if (pBrowseDialog)
+   {
+       delete pBrowseDialog;
+       pBrowseDialog = NULL;
+   }
+
+       pImageListModel = NULL;
 }
 
-void   Animatron::launchOpenWall()
+void   Animatron::wallInsertItem()
 {
    if (!pOpenDialog)
    {
@@ -162,8 +250,8 @@ void   Animatron::launchOpenWall()
        pOpenDialog->setInlinePreviewShown(true);
        pOpenDialog->setCaption(QString::fromAscii("Select wallpaper image..."));
        pOpenDialog->setModal(false);
-       connect(pOpenDialog, SIGNAL(okClicked()), this, SLOT(dialogOpenWallOkay()));
-       connect(pOpenDialog, SIGNAL(destroyed(QObject*)), this, SLOT(dialogOpenWallDone()));
+       connect(pOpenDialog, SIGNAL(okClicked()), this, SLOT(wallInsertDialogOkay()));
+       connect(pOpenDialog, SIGNAL(destroyed(QObject*)), this, SLOT(wallInsertDialogDone()));
    }
 
        pOpenDialog->show();
@@ -171,38 +259,135 @@ void   Animatron::launchOpenWall()
        pOpenDialog->activateWindow();
 }
 
-void   Animatron::dialogOpenWallOkay()
+void   Animatron::wallInsertDialogOkay()
 {
-   if (!pOpenDialog)
-       return;
+       Q_ASSERT(pImageListModel);
 
-       cstyle = pOpenDialog->selectedFile();
+   const QFileInfo info(pOpenDialog->selectedFile());
+   const QString   pathname = info.canonicalFilePath();
 
-   if (mStyle.load(cstyle))
-       fprintf(stderr, "Image loaded successfuly.\n");
-       else
-       fprintf(stderr, "Failed to load image\n");
+   if (!pathname.isEmpty())
+   {
+            QModelIndex   index;
 
-       emit settingsChanged(true);
+        if (!pImageListModel->contains(pathname))
+        {
+            pImageListModel->addBackground(pathname);
+            cuserstyles << pathname;
+        }
+
+            index = pImageListModel->indexOf(pathname);
+
+        if (index.isValid())
+        {
+            mConfigUi.ImageList->setCurrentIndex(index);
+        }
+   }
+
+        wallImageChanged(pathname);
 }
 
-void   Animatron::dialogOpenWallDone()
-{
-
-}
-
-void   Animatron::launchBrowseWall()
+void   Animatron::wallInsertDialogDone()
 {
 }
 
-void   Animatron::dialogBrowseWallOkay()
+void   Animatron::wallBrowseItem()
 {
+   if (!pBrowseDialog)
+   {
+        pBrowseDialog = new KNS3::DownloadDialog("animatron.knsrc", NULL);
+        connect(pBrowseDialog, SIGNAL(accepted()), SLOT(wallBrowseDialogOkay()));
+        connect(pBrowseDialog, SIGNAL(destroyed()), SLOT(wallBrowseDialogDone()));
+   }
 
+        pBrowseDialog->show();
 }
 
-void   Animatron::dialogBrowseWallDone()
+void   Animatron::wallBrowseDialogOkay()
 {
+       pImageListModel->reload();
+       emit SettingsChanged(true);
+}
 
+void   Animatron::wallBrowseDialogDone()
+{
+}
+
+void   Animatron::wallRemoveItem(QString pathname)
+{
+   int index = cuserstyles.indexOf(pathname);
+
+#ifdef DEBUG
+       printf("Removing image `%s`@%d\n", pathname.toAscii().data(), index);
+#endif
+
+   if (index >= 0)
+   {    cuserstyles.removeAt(index);
+        pImageListModel->reload(cuserstyles);
+        emit SettingsChanged(true);
+   }
+}
+
+void   Animatron::wallFetchList()
+{
+       mConfigUi.ImageList->setModel(pImageListModel);
+       connect(mConfigUi.ImageList->selectionModel(), SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),
+               this, SLOT(wallIndexChanged(const QModelIndex&)));
+
+       QModelIndex index = pImageListModel->indexOf(cstyle);
+
+   if  (index.isValid())
+   {
+        mConfigUi.ImageList->setCurrentIndex(index);
+   }
+}
+
+void   Animatron::wallIndexChanged(const QModelIndex& index)
+{
+    if (index.row() >= 0)
+    {
+        Plasma::Package* package = pImageListModel->package(index.row());
+
+        if (package->structure()->contentsPrefixPaths().isEmpty())
+            wallImageChanged(package->filePath("preferred"));
+            else
+            wallImageChanged(package->path());
+    }
+}
+
+void   Animatron::wallImageChanged(QString pathname)
+{
+   if (pathname != cstyle)
+   {
+       cstyle = pathname;
+       emit SettingsChanged(true);
+   }
+
+#ifdef DEBUG
+       fprintf(stderr, "Changed background image to `%s`...\n", pathname.toAscii().data());
+#endif
+}
+
+void   Animatron::wallArrangementChanged(int value)
+{
+       carrange = mConfigUi.ArrangementCombo->itemData(value).value<int>();
+#ifdef DEBUG
+       fprintf(stderr, "Arrangement changed to `%s`, value==%d...\n", mConfigUi.ArrangementCombo->itemText(value).toAscii().data(), carrange);
+#endif
+}
+
+void   Animatron::modified()
+{
+       ctextfont = mConfigUi.FontChooser->font();
+       ctextcolor = mConfigUi.ColorBtn->color();
+     //crefresh = mConfigUi.RefreshCombo->text().toInt();
+
+       mSceneConfig.rez_x = mConfigUi.WidthSpinner->value();
+       mSceneConfig.rez_y = mConfigUi.HeightSpinner->value();
+       mSceneConfig.ffcount = mConfigUi.CountSpinner->value();
+       mSceneConfig.ffbase = mConfigUi.BaseCombo->currentText().toInt();
+
+       emit SettingsChanged(true);
 }
 
 void   Animatron::suspend(bool value)
@@ -213,37 +398,35 @@ void   Animatron::suspend(bool value)
        unfreeze();
 }
 
-bool   Animatron::freeze()
+void   Animatron::freeze()
 {
-   if (ready)
+   if (enabled)
    {
 #ifdef DEBUG
        printf("FROZEN\n");
 #endif
-       mScene.setLockFlags(0);
-       emit statusupdate(ready = false);
-   }
 
-       return true;
+       mScene.setLockFlags(0);
+       emit statusupdate(enabled = false);
+   }
 }
 
-bool   Animatron::unfreeze()
+void   Animatron::unfreeze()
 {
-   if (!ready)
+   if (!enabled)
    {
 #ifdef DEBUG
        printf("UNFROZEN\n");
 #endif
-       mScene.setLockFlags(Scene::ENA_ALL);
-       emit statusupdate(ready = true);
-   }
 
-       return true;
+       mScene.setLockFlags(Scene::ENA_ALL);
+       emit statusupdate(enabled = true);
+   }
 }
 
 bool   Animatron::getstatus()
 {
-       return ready;
+       return enabled;
 }
 
 void   Animatron::sync()
@@ -269,11 +452,12 @@ void   Animatron:: paint(QPainter* painter, const QRectF& exposedRect)
         //blit the background (saves all the per-pixel-products that blending does)
           painter->setCompositionMode(QPainter::CompositionMode_Source);
 
-       if (mStyle.width() < boundingRect().width() || mStyle.height() < boundingRect().height())
+       if (!carrange || mStyle.width() < boundingRect().width() || mStyle.height() < boundingRect().height())
            painter->fillRect(exposedRect, Qt::black);
 
-       if (!mStyle.isNull())
-           painter->drawImage((boundingRect().width() - mStyle.width()) / 2, (boundingRect().height() - mStyle.height()) / 2, mStyle);
+       if (carrange)
+           if (!mStyle.isNull())
+               painter->drawImage((boundingRect().width() - mStyle.width()) / 2, (boundingRect().height() - mStyle.height()) / 2, mStyle);
 
            painter->setPen(ctextcolor);
            painter->setFont(ctextfont);
@@ -283,4 +467,5 @@ void   Animatron:: paint(QPainter* painter, const QRectF& exposedRect)
    }
 }
 
+K_EXPORT_PLASMA_WALLPAPER(animatron, Animatron)
 #include "animatron.moc"

@@ -1,9 +1,11 @@
-blah
+Animatron plasma wallpaper for KDE4.x
 
--- Build instructions --
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+Build instructions:
+
 cd <where_your_source_dir_is>
 mkdir -p build && cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=`kde4-config --prefix`
+cmake .. -DCMAKE_INSTALL_PREFIX=`kde4-config --prefix` -DCMAKE_BUILD_TYPE=RelWithDebInfo
 make
 sudo make install
 
@@ -12,3 +14,7 @@ plasmawallpaperviewer -p animatron
 
 You might need to run kbuildsycoca4
 in order to get the .desktop file recognized.
+
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+Enjoy,
+spaceape

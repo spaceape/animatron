@@ -131,6 +131,16 @@ void   Scene::setLockFlags(uint ulock)
        lock = ulock;
 }
 
+bool   Scene::getEnabled()
+{
+       return enabled;
+}
+
+void   Scene::setEnabled(bool uenabled)
+{
+       enabled = uenabled;
+}
+
 bool   Scene::sync(float dt)
 {
    if (enabled)
