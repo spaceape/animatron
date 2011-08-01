@@ -112,12 +112,12 @@ void   Scene::reset(SceneConfig& config)
              delete fireflies[--count];
        }
 
-   if (cell.width() + cell.height() >= 12)
+   if (cell.width() >= 5 && cell.height() >= 7)
        detail = DETAIL_FULL;
        else
        detail = DETAIL_SKEL;
 
-       enabled = width > 63 && height >= 47;
+       enabled = width >= screen.width() && height >= screen.height();
        resync = enabled;
 }
 
@@ -133,12 +133,15 @@ void   Scene::setLockFlags(uint ulock)
 
 bool   Scene::getEnabled()
 {
-       return enabled;
+       return lock != 0;
 }
 
 void   Scene::setEnabled(bool uenabled)
 {
-       enabled = uenabled;
+   if (uenabled)
+       lock = ENA_ALL;
+       else
+       lock = 0;
 }
 
 bool   Scene::sync(float dt)

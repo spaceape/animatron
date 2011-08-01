@@ -21,12 +21,15 @@ include_directories(
 )
 
 # sources
-set(animatron_SRCS animatron.cpp fireflies.cpp backgroundlist.cpp)
+set(animatron_srcs switches.cpp fireflies.cpp blacklist.cpp imagelist.cpp config.cpp animatron.cpp)
 
 #uis
-kde4_add_ui_files(animatron_SRCS config.ui)
+kde4_add_ui_files(animatron_srcs backgroundpage.ui functionpage.ui)
 
-kde4_add_plugin(plasma_wallpaper_animatron ${animatron_SRCS})
+#resources
+qt4_add_resources(animatron_rcc animatron.qrc)
+
+kde4_add_plugin(plasma_wallpaper_animatron ${animatron_srcs} ${animatron_rcc})
 
 target_link_libraries(plasma_wallpaper_animatron
    ${KDE4_PLASMA_LIBS} ${KDE4_KDEUI_LIBS} ${KDE4_KIO_LIBS} ${KDE4_KFILE_LIBS} ${KDE4_KNEWSTUFF3_LIBS}
@@ -43,3 +46,5 @@ install(FILES plasma-wallpaper-animatron.desktop
 install(FILES animatron.knsrc
    DESTINATION ${CONFIG_INSTALL_DIR}
 )
+
+add_subdirectory(t)

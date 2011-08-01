@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>650</width>
-    <height>535</height>
+    <width>649</width>
+    <height>644</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <widget class="QLabel" name="label_4">
+    <widget class="QLabel" name="label_1">
      <property name="text">
       <string>Font:</string>
      </property>
@@ -25,7 +25,7 @@
        <property name="font">
         <font>
          <family>Courier New</family>
-         <pointsize>9</pointsize>
+         <pointsize>7</pointsize>
          <weight>75</weight>
          <italic>false</italic>
          <bold>true</bold>
@@ -36,7 +36,7 @@
     </layout>
    </item>
    <item row="1" column="0">
-    <widget class="QLabel" name="label_5">
+    <widget class="QLabel" name="label_2">
      <property name="text">
       <string>Color:</string>
      </property>
@@ -87,7 +87,7 @@
     </layout>
    </item>
    <item row="2" column="0">
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="label_3">
      <property name="locale">
       <locale language="English" country="UnitedStates"/>
      </property>
@@ -145,7 +145,7 @@
     </layout>
    </item>
    <item row="3" column="0">
-    <widget class="QLabel" name="label_3">
+    <widget class="QLabel" name="label_4">
      <property name="locale">
       <locale language="English" country="UnitedStates"/>
      </property>
@@ -204,7 +204,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label">
+      <widget class="QLabel" name="label_5">
        <property name="text">
         <string>Bins:</string>
        </property>
@@ -311,82 +311,19 @@
     </layout>
    </item>
    <item row="5" column="0" colspan="2">
-    <widget class="KTabWidget" name="ktabwidget">
+    <widget class="KTabWidget" name="SettingsGroup">
+     <property name="tabPosition">
+      <enum>QTabWidget::West</enum>
+     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="BackTab">
+     <widget class="QWidget" name="BackgroundSettings">
       <attribute name="title">
        <string>Background</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="0" column="0">
-        <widget class="QListView" name="ImageList"/>
-       </item>
-       <item row="1" column="0">
-        <layout class="QHBoxLayout" name="FileBar">
-         <item>
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>Arrangement:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="KComboBox" name="ArrangementCombo">
-           <property name="minimumSize">
-            <size>
-             <width>192</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="KSeparator" name="kseparator">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="KPushButton" name="OpenWallBtn">
-           <property name="text">
-            <string>Op&amp;en...</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="GetNewWallBtn">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="toolTip">
-            <string>Download new wallpapers</string>
-           </property>
-           <property name="text">
-            <string>Get New Wallpapers...</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
      </widget>
-     <widget class="QWidget" name="FuncTab">
+     <widget class="QWidget" name="FunctionalitySettings">
       <attribute name="title">
        <string>Functionality</string>
       </attribute>
@@ -407,11 +344,6 @@
    <header>kfontrequester.h</header>
   </customwidget>
   <customwidget>
-   <class>KPushButton</class>
-   <extends>QPushButton</extends>
-   <header>kpushbutton.h</header>
-  </customwidget>
-  <customwidget>
    <class>KComboBox</class>
    <extends>QComboBox</extends>
    <header>kcombobox.h</header>
@@ -426,11 +358,6 @@
    <extends>QTabWidget</extends>
    <header>ktabwidget.h</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>KSeparator</class>
-   <extends>QFrame</extends>
-   <header>kseparator.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

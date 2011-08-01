@@ -52,7 +52,7 @@
 #include <Plasma/Package>
 #include <Plasma/PackageStructure>
 #include <Plasma/PaintUtils>
-#include "backgroundlist.h"
+#include "imagelist.h"
 #include "animatron.h"
 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
@@ -824,5 +824,5 @@ void RemoveButtonManager::removeButtonClicked()
 }
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
-#include "backgroundlist.moc"
+#include "imagelist.moc"
 #endif

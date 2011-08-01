@@ -16,5 +16,15 @@ You might need to run kbuildsycoca4
 in order to get the .desktop file recognized.
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+Changelog:
+
+v 0.2
+    KDE-ish background image loading support
+    reconstructed config dialog support
+    advanced disable conditions with power-management awareness
+
+v 0.1
+    basic background-image loading support
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 Enjoy,
 spaceape

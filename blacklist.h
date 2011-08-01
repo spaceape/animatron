@@ -1,5 +1,5 @@
-#ifndef animatron_h
-#define animatron_h
+#ifndef blacklist_h
+#define blacklist_h
 /*
     Copyright (c) 2011, spaceape [[ spaceape99@gmail.com ]]
     All rights reserved.
@@ -26,62 +26,76 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include <QObject>
+#include <QWidget>
+#include <QStringList>
 #include <QTimer>
-#include <QImage>
-#include <Plasma/Wallpaper>
-#include <Plasma/Package>
-
-#include "config.h"
-#include "fireflies.h"
-#include "switches.h"
+#include <QtDBus>
+#include <KWindowInfo>
+#include <map>
+#include <vector>
+#include <string>
 using namespace std;
 
-class QSizeF;
-
-//org.kde.screensaver Screensaver/
-//org.kde.krunner
-//org.freedesktop.upower
-
-class Animatron: public Plasma::Wallpaper
+class DesktopList :public QWidget
 {
            Q_OBJECT
 
-           GlobalConfig mGlobalConfig;
-           SceneConfig mSceneConfig;
+           QImage mDesktopImage;
+           QFont mDesktopFont;
+           QSize mItemSize;
+           QRect mItemRect;
+           QSizeF mBoardSize;
+           QPointF mBoardOffset;
 
-           Scene mScene;
-           KillSwitch  Ena;
-           DesktopSwitch Act;
+ typedef vector<string> v_desktop_t;
+ typedef v_desktop_t::iterator v_desktop_i;
 
-           QImage   mStyle;
-           QSizeF   mSize;
+           v_desktop_t items;
 
-           float    scenedt;
-           bool     sceners;
-           bool     sceneupdate;
-           bool     status;
-           bool     ready;
+           bool   minside;
+           QPoint mpointer;
 
-           ConfigWidget* pConfigWidget;
-           QTimer*  pTimer;
+ typedef map<int, float> m_timer_t;
+ typedef m_timer_t::iterator m_timer_i;
+
+           m_timer_t timers;
+
+ static const float dt = 0.05;
+
+           QTimer* pTimer;
+           bool resync;
+
+           int  index;
 
  private slots:
-           void hard_set(bool);
-           void soft_set(bool);
+           void deskNameChanged();
+           void deskCountChanged();
            void sync();
 
  protected:
- virtual   void init(const KConfigGroup& config);
+           void updateitems();
+           void updateinterface();
+           int  traceitem(QPoint);
+
+           void enterEvent(QEvent*);
+           void leaveEvent(QEvent*);
+           void mouseMoveEvent(QMouseEvent*);
+           void mousePressEvent(QMouseEvent*);
+           void mouseReleaseEvent(QMouseEvent*);
+           void resizeEvent(QResizeEvent*);
+           void paintEvent(QPaintEvent*);
 
  public:
-           Animatron(QObject* parent, const QVariantList& args);
-           ~Animatron();
-           //void enableHardLocks();
-           //void disableHardLocks();
+          DesktopList(QWidget* parent);
+ virtual  ~DesktopList();
 
- virtual   void save(KConfigGroup& config);
- virtual   QWidget* createConfigurationInterface(QWidget* parent);
-           void updateScreenshot(QPersistentModelIndex index);
- virtual   void paint(QPainter* painter, const QRectF& exposedRect);
+           int getIndex();
+           void shout();
+
+ public slots:
+ signals:
+           void IndexChanged(int);
 };
+
 #endif
