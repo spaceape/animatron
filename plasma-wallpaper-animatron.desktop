@@ -87,7 +87,7 @@ Comment[uk]=Плазма animatron
 Comment[x-test]=xxPlasma animatronxx
 Comment[zh_CN]=Plasma animatron
 Comment[zh_TW]=Plasma animatron
-Icon=image-jpeg
+Icon=animatron
 ServiceTypes=Plasma/Wallpaper
 
 X-KDE-Library=plasma_wallpaper_animatron

@@ -47,4 +47,8 @@ install(FILES animatron.knsrc
    DESTINATION ${CONFIG_INSTALL_DIR}
 )
 
+install(FILES animatron.png
+   DESTINATION ${KDE4_ICON_INSTALL_DIR}
+)
+
 add_subdirectory(t)

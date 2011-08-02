@@ -40,8 +40,8 @@
        enabled = false;
 
        bus.registerObject("/KillSwitch", this, QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals);
-       bus.connect("org.freedesktop.ScreenSaver", "/ScreenSaver", "org.freedesktop.ScreenSaver", "ActiveChanged", this, SLOT(remote_status_update(bool)));
-       bus.connect("org.freedesktop.PowerManagement", "/org/freedesktop/PowerManagement", "org.freedesktop.PowerManagement", "PowerSaveStatusChanged", this, SLOT(remote_status_update(bool)));
+       bus.connect("org.freedesktop.ScreenSaver", "/ScreenSaver", "org.freedesktop.ScreenSaver", "ActiveChanged", this, SLOT(setSuspended(bool)));
+       bus.connect("org.freedesktop.PowerManagement", "/org/freedesktop/PowerManagement", "org.freedesktop.PowerManagement", "PowerSaveStatusChanged", this, SLOT(setSuspended(bool)));
 
        fprintf(stderr, "Connected to DBUS\n");
        setPower(true);
@@ -341,12 +341,12 @@ void   DesktopSwitch::setEnabled(bool value)
            fprintf(stderr, "DS online\n");
        }   else
        {
-           disconnect(this, SLOT(wndActiveChanged(WId)));
-           disconnect(this, SLOT(wndRemoved(WId)));
-           disconnect(this, SLOT(wndAdded(WId)));
-           disconnect(this, SLOT(deskSwitched(int)));
-           disconnect(this, SLOT(deskCountChanged()));
-           disconnect(this, SLOT(deskNameChanged()));
+           disconnect(KWindowSystem::self(), SIGNAL(desktopNamesChanged()), this, SLOT(deskNameChanged()));
+           disconnect(KWindowSystem::self(), SIGNAL(numberOfDesktopsChanged(int)), this, SLOT(deskCountChanged()));
+           disconnect(KWindowSystem::self(), SIGNAL(currentDesktopChanged(int)), this, SLOT(deskSwitched(int)));
+           disconnect(KWindowSystem::self(), SIGNAL(windowAdded(WId)), this, SLOT(wndAdded(WId)));
+           disconnect(KWindowSystem::self(), SIGNAL(windowRemoved(WId)), this, SLOT(wndRemoved(WId)));
+           disconnect(KWindowSystem::self(), SIGNAL(activeWindowChanged(WId)), this, SLOT(wndActiveChanged(WId)));
 
            clear();
            fprintf(stderr, "DS offline\n");
