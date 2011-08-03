@@ -37,10 +37,7 @@
 using namespace std;
 
 class QSizeF;
-
-//org.kde.screensaver Screensaver/
-//org.kde.krunner
-//org.freedesktop.upower
+class QRectF;
 
 class Animatron: public Plasma::Wallpaper
 {
@@ -54,6 +51,9 @@ class Animatron: public Plasma::Wallpaper
            DesktopSwitch Act;
 
            QImage   mStyle;
+           QRectF   mStyleRect;
+           QRectF   mStyleSrcRect;
+           QRectF   mStyleDestRect;
            QSizeF   mSize;
 
            float    scenedt;

@@ -39,11 +39,12 @@
        power = true;
        enabled = false;
 
+#ifdef ENABLE_DBUS
        bus.registerObject("/KillSwitch", this, QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals);
+       fprintf(stderr, "Connected to DBUS\n");
+#endif
        bus.connect("org.freedesktop.ScreenSaver", "/ScreenSaver", "org.freedesktop.ScreenSaver", "ActiveChanged", this, SLOT(setSuspended(bool)));
        bus.connect("org.freedesktop.PowerManagement", "/org/freedesktop/PowerManagement", "org.freedesktop.PowerManagement", "PowerSaveStatusChanged", this, SLOT(setSuspended(bool)));
-
-       fprintf(stderr, "Connected to DBUS\n");
        setPower(true);
 }
 
@@ -57,6 +58,12 @@ bool   KillSwitch::setSuspended(bool value)
 {
        return setPower(!value) != value;
 }
+
+bool   KillSwitch::isSuspended()
+{
+       return !power;
+}
+
 
 bool   KillSwitch::freeze()
 {

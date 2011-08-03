@@ -47,13 +47,18 @@
 
        connect(Ena.ptr(), SIGNAL(set(bool)), this, SLOT(hard_set(bool)));
        connect(Act.ptr(), SIGNAL(set(bool)), this, SLOT(soft_set(bool)));
+
+#ifdef ENABLE_DBUS
        QDBusConnection::sessionBus().registerService(DBUS_DOM);
+#endif
        instance = this;
 }
 
        Animatron:: ~Animatron()
 {
+#ifdef ENABLE_DBUS
        QDBusConnection::sessionBus().unregisterService(DBUS_DOM);
+#endif
        fprintf(stderr, "Plugin finished.\n");
 }
 
@@ -76,6 +81,8 @@ void   Animatron:: init(const KConfigGroup& Config)
        {
               mGlobalConfig.Rules.append("#");
        }
+
+       mGlobalConfig.spit();
 
        mSceneConfig.width = boundingRect().width();
        mSceneConfig.height = boundingRect().height();
@@ -109,8 +116,12 @@ void   Animatron:: init(const KConfigGroup& Config)
 
        Ena.setEnabled(true);
        Act.reset(mGlobalConfig.Rules);
-       mScene.reset(mSceneConfig);
 
+       mScene.reset(mSceneConfig);
+       mSize = QSizeF(0.0f, 0.0f);
+       mStyleRect = QRectF(1.0f, 1.0f, 1.0f, 1.0f);
+       mStyleSrcRect =  QRectF(0.0f, 0.0f, 0.0f, 0.0f);
+       mStyleDestRect = QRectF(0.0f, 0.0f, 0.0f, 0.0f);
        pTimer->start();
 
        ready = true;
@@ -133,6 +144,7 @@ void   Animatron:: save(KConfigGroup& Config)
        Config.writeEntry("history", mGlobalConfig.History);
        Config.writeEntry("rules", mGlobalConfig.Rules);
 
+       mGlobalConfig.spit();
        ready = false;
 }
 
@@ -156,13 +168,13 @@ void   Animatron::hard_set(bool value)
 {
        fprintf(stderr, "Hard b=%d\n", value);
        Act.setEnabled(value);
-       mScene.setEnabled(value);
+       mScene.setActive(value);
 }
 
 void   Animatron::soft_set(bool value)
 {
        fprintf(stderr, "Soft b=%d\n", value);
-       mScene.setEnabled(value);
+       mScene.setActive(value);
 }
 
 void   Animatron::sync()
@@ -175,32 +187,49 @@ void   Animatron::sync()
 
 void   Animatron:: paint(QPainter* painter, const QRectF& exposedRect)
 {
-   if (mSize != boundingRect().size())
+       bool  resize = mSize != boundingRect().size();
+       bool  reset  = mStyleRect != mStyleSrcRect;
+
+   if (resize)
    {   mSize  = boundingRect().size();
        mSceneConfig.width = mSize.width();
        mSceneConfig.height = mSize.height();
        mScene.reset(mSceneConfig);
    }
 
-   if (sceners)
+   if (resize || reset)
    {
-        //blit the background (saves all the per-pixel-products that blending does)
-          painter->setCompositionMode(QPainter::CompositionMode_Source);
-          painter->setClipRect(boundingRect());
-
-       if (!mGlobalConfig.Arrangement || mStyle.width() < boundingRect().width() || mStyle.height() < boundingRect().height())
-           painter->fillRect(exposedRect, Qt::black);
-
-       if (mGlobalConfig.Arrangement)
-           if (!mStyle.isNull())
-               painter->drawImage((boundingRect().width() - mStyle.width()) / 2, (boundingRect().height() - mStyle.height()) / 2, mStyle);
-
-           painter->setPen(mGlobalConfig.Color);
-           painter->setFont(mGlobalConfig.Font);
-           mScene.render(painter);
-
-           sceners = false;
+       mStyleSrcRect = QRectF(mStyle.rect()).intersected(boundingRect());
+       mStyleDestRect = mStyleSrcRect;
+       mStyleSrcRect.moveCenter(mStyle.rect().center());
+       mStyleDestRect.moveCenter(boundingRect().center());
+       mStyleRect = mStyleSrcRect;
    }
+
+   //blit the background (saves all the per-pixel-products that blending does)
+       painter->setCompositionMode(QPainter::CompositionMode_Source);
+       painter->setClipRect(exposedRect);
+
+   if (!mGlobalConfig.Arrangement || mStyle.width() < boundingRect().width() || mStyle.height() < boundingRect().height())
+       painter->fillRect(exposedRect, Qt::black);
+
+   if (mGlobalConfig.Arrangement)
+   {
+       if (!mStyle.isNull())
+       {
+           QRectF dst = mStyleDestRect.intersected(exposedRect);
+           QRectF src = QRectF(exposedRect.x() + mStyleSrcRect.x(), exposedRect.y() + mStyleSrcRect.y(), dst.width(), dst.height());
+
+           painter->drawImage(dst, mStyle, src);
+       }
+
+   }
+
+       painter->setPen(mGlobalConfig.Color);
+       painter->setFont(mGlobalConfig.Font);
+       mScene.render(painter);
+
+       sceners = false;
 }
 
 K_EXPORT_PLASMA_WALLPAPER(animatron, Animatron)

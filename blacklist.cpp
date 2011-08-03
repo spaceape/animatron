@@ -39,16 +39,16 @@
        DesktopList::DesktopList(QWidget* parent)
        :QWidget(parent)
 {
-       mDesktopImage.load(":/desktop.png");
+       imgDesktop.load(":/desktop.png");
+       imgDeskAll.load(":/desktop-all.png");
        mDesktopFont = QFont("DejaVu Sans", 8);
        setMinimumHeight(128);
        setMaximumHeight(128);
 
-       mItemSize = QSize(mDesktopImage.width() + 2, height());
-       mItemRect = QRect(1, 0, mDesktopImage.width(), height() - 24);
+       mItemWidth = imgDesktop.width();
+       mItemRect = QRectF(0.0f, 0.0f, mItemWidth, height() - 24.0f);
 
-       mBoardSize = QSizeF(0.0f, 0.0f);
-       mBoardOffset = QPointF(0.0f, 0.0f);
+     //mSlideRect = QRectF(0.0f, 0.0f, 0.0f, 0.0f);
 
        pTimer = new QTimer(this);
        pTimer->setInterval(dt * 1000);
@@ -58,14 +58,14 @@
        connect(KWindowSystem::self(), SIGNAL(numberOfDesktopsChanged(int)), this, SLOT(deskCountChanged()));
 
        minside = false;
-       mpointer = QPoint(0, 0);
+       mpointer = QPointF(0.0f, 0.0f);
+       mpivot = QPointF(0.0f, 0.0f);
 
        index = 0;
        updateitems();
        pTimer->start();
 
        setMouseTracking(true);
-       fprintf(stderr, "DesktopList: size=(%d, %d) | itemsize=(%d, %d)", width(), height(), mItemSize.width(), mItemSize.height());
 }
 
        DesktopList::~DesktopList()
@@ -98,35 +98,47 @@ void   DesktopList::updateitems()
 
        items.clear();
 
-       items.push_back("All");
+       if (index > KWindowSystem::numberOfDesktops())
+           index = KWindowSystem::NumberOfDesktops;
+
+       if (KWindowSystem::numberOfDesktops() > 1)
+       {
+           items.push_back("All Desktops");
+       }
 
        for (x = 1; x <= KWindowSystem::numberOfDesktops(); ++x)
        {
             items.push_back(KWindowSystem::desktopName(x).toAscii().data());
        }
 
-       updateinterface();
+           mSlideWidth = items.size() * mItemWidth;
+
+           updateinterface();
 }
 
 void   DesktopList::updateinterface()
 {
-       mBoardSize = QSizeF(mItemSize.width() * items.size(), 0.0f);
 
-   if (mBoardSize.width() < width())
-   {
-       mBoardOffset = QPointF((width() - mBoardSize.width()) / 2.0f, 0.0f);
-   }
+   if (mSlideWidth < width())
+       mpivot = QPointF((width() - mSlideWidth) / 2.0f, 0.0f);
+       else
+       mpivot = QPointF(width() / 2.0f - (index + 0.5f) * mItemWidth, 0.0f);
 
        resync = true;
 }
 
-int    DesktopList::traceitem(QPoint point)
+int    DesktopList::traceitem(QPointF point)
 {
-       int index = floor( (point.x() - mBoardOffset.x()) / mItemSize.width() );
+       int index = floor((point.x() - mSlideOffset) / mItemWidth);
 
-   if (index > 0)
-       if (index > items.size())
+   if (index >= 0)
+   {
+       if (index >= items.size())
            index = -1;
+   }   else
+   {
+       index = -1;
+   }
 
        return index;
 }
@@ -140,6 +152,24 @@ void   DesktopList::sync()
        if (index >= 0)
        {
            timers[index] = 1.0f;
+       }
+   }
+
+   float dx = mSlideOffset - mpivot.x();
+   float p;
+
+   if (dx != 0.0f)
+   {
+       mSlideOffset -= dx / 2.0f;
+       resync = true;
+
+       if (mSlideWidth > width())
+       {
+           if (mSlideOffset > 0.0f)
+               mSlideOffset = 0.0f;
+
+           if ((mSlideOffset + mSlideWidth) < width())
+               mSlideOffset = width() - mSlideWidth;
        }
    }
 
@@ -181,7 +211,7 @@ void   DesktopList::mouseMoveEvent(QMouseEvent* ev)
 
 void   DesktopList::mousePressEvent(QMouseEvent* ev)
 {
-    if (ev->buttons() & Qt::LeftButton)
+   if (ev->buttons() & Qt::LeftButton)
    {
        int trace = traceitem(ev->pos());
 
@@ -194,6 +224,8 @@ void   DesktopList::mousePressEvent(QMouseEvent* ev)
 
                emit IndexChanged(index);
            }
+
+           updateinterface();
        }
    }
 }
@@ -217,40 +249,53 @@ void   DesktopList::paintEvent(QPaintEvent*)
        dev.drawText(QRect(4, height() - 24, width() - 8, 24), Qt::AlignVCenter, items[index].c_str());
 
        int ix = 0;
-       QRect ir = mItemRect;
+//       int ix = floor(-mSlideOffset / mItemWidth); //
 
-       ir.moveTo(mBoardOffset.x(), 0);
+       if (ix < 0)
+       {
+           ix = 0;
+       }
+
+       QRectF ir = mItemRect;
+
+       ir.moveTo(mSlideOffset, 0);
 
        dev.setFont(mDesktopFont);
        dev.setPen(Qt::white);
 
        while (ix < items.size())
        {
-          if (ir.right() > 0.0f)
+          if (ix == index)
           {
-              if (ix == index)
-              {
-                  dev.fillRect(QRect(ir.left(), ir.top(), ir.width(), 4), Qt::white);
-                  dev.setOpacity(0.5f);
-                  dev.fillRect(ir, QColor::fromRgb(0, 0, 255));
-                  dev.drawRect(ir);
-              }
-
-                  m_timer_i it = timers.find(ix);
-
-              if (it != timers.end())
-              {
-                  dev.setOpacity(it->second);
-                  dev.fillRect(QRect(ir.left(), ir.bottom() - 4, ir.width(), 4), Qt::red);
-              }
-
-              dev.setOpacity(1.0f);
-              dev.drawImage(ir.x(), 8, mDesktopImage);
-              dev.drawText(ir, Qt::AlignCenter, QString().setNum(ix));
-              ir.translate(mItemSize.width(), 0);
+              dev.fillRect(QRect(ir.left(), ir.top(), ir.width(), 4), Qt::white);
+              dev.setOpacity(0.5f);
+              dev.fillRect(ir, QColor::fromRgb(0, 0, 255));
+              dev.drawRect(ir);
           }
 
-          if (ir.left() > width())
+              m_timer_i it = timers.find(ix);
+
+          if (it != timers.end())
+          {
+              dev.setOpacity(it->second);
+              dev.fillRect(QRect(ir.left(), ir.bottom() - 4, ir.width(), 4), Qt::red);
+          }
+
+              dev.setOpacity(1.0f);
+
+          if (ix)
+          {
+              dev.drawImage(ir.x(), 8, imgDesktop);
+              dev.drawText(ir, Qt::AlignCenter, QString().setNum(ix));
+          }   else
+          {
+              dev.drawImage(ir.x(), 8, imgDeskAll);
+             //dev.drawText(ir, Qt::AlignCenter, QString("@"));
+          }
+
+              ir.translate(mItemWidth, 0);
+
+          if (ir.x() > width())
           {
               break;
           }

@@ -30,21 +30,23 @@
 #include <QWidget>
 #include <QStringList>
 #include <QTimer>
-#include <QtDBus>
 #include <KWindowInfo>
 #include <map>
 #include <vector>
 #include <string>
 using namespace std;
 
+#include <QtDBus>
+#ifdef ENABLE_DBUS
 #define DBUS_DOM "org.plasmaabuse.animatron"
 #define DBUS_ORG "/"
+#endif
 
 class KillSwitch :public QObject
 {
            Q_OBJECT
-
            QDBusConnection bus;
+
            bool power;
            bool enabled;
 
@@ -63,6 +65,7 @@ class KillSwitch :public QObject
 
  public slots:
            bool setSuspended(bool);
+           bool isSuspended();
            bool freeze();
            bool unfreeze();
  signals:

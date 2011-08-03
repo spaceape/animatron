@@ -131,14 +131,15 @@ void   Scene::setLockFlags(uint ulock)
        lock = ulock;
 }
 
-bool   Scene::getEnabled()
+
+bool   Scene::getActive()
 {
        return lock != 0;
 }
 
-void   Scene::setEnabled(bool uenabled)
+void   Scene::setActive(bool uactive)
 {
-   if (uenabled)
+   if (uactive)
        lock = ENA_ALL;
        else
        lock = 0;

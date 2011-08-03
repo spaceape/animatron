@@ -42,7 +42,7 @@
        Bins = 8;
        Base = 16;
        Style = "";
-       Arrangement = 0;
+       Arrangement = (int)Plasma::Wallpaper::CenteredResize;
 }
 
        GlobalConfig::GlobalConfig(KConfigGroup& src)
@@ -69,6 +69,19 @@
 {
 }
 
+void   GlobalConfig::spit()
+{
+       printf("font=[%s, %d]\n", Font.family().toAscii().data(), Font.pixelSize());
+       printf("color=[%.2x %.2x %.2x]\n", Color.red(), Color.green(), Color.blue());
+       printf("refresh=%d\n", Refresh);
+       printf("res=[%dx%d]\n", HorizontalRezolution, VerticalRezolution);
+       printf("bins=%d\n", Bins);
+       printf("base=%d\n", Base);
+       printf("style=%s\n", Style.toAscii().data());
+       printf("arrangement=%d\n", Arrangement);
+       printf("history size=%d\n", History.count());
+       printf("rules size=%d\n", Rules.count());
+}
 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
@@ -80,7 +93,7 @@
        gridLayout = new QGridLayout(this);
        gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
        label_1 = new QLabel(this);
-       label_1->setObjectName(QString::fromUtf8("label_1"));
+       label_1->setText("Font:");
 
        gridLayout->addWidget(label_1, 0, 0, 1, 1);
 
@@ -95,7 +108,7 @@
        gridLayout->addLayout(FontBar, 0, 1, 1, 1);
 
        label_2 = new QLabel(this);
-       label_2->setObjectName(QString::fromUtf8("label_2"));
+       label_2->setText("Color:");
 
        gridLayout->addWidget(label_2, 1, 0, 1, 1);
 
@@ -117,8 +130,7 @@
        gridLayout->addLayout(ColorBar, 1, 1, 1, 1);
 
        label_3 = new QLabel(this);
-       label_3->setObjectName(QString::fromUtf8("label_3"));
-       label_3->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
+       label_3->setText("Sync:");
 
        gridLayout->addWidget(label_3, 2, 0, 1, 1);
 
@@ -143,8 +155,7 @@
        gridLayout->addLayout(RefreshBar, 2, 1, 1, 1);
 
        label_4 = new QLabel(this);
-       label_4->setObjectName(QString::fromUtf8("label_4"));
-       label_4->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
+       label_4->setText("Grid:");
 
        gridLayout->addWidget(label_4, 3, 0, 1, 1);
 
@@ -171,7 +182,7 @@
        SizeBar->addWidget(HeightSpinner);
 
        label_5 = new QLabel(this);
-       label_5->setObjectName(QString::fromUtf8("label_5"));
+       label_5->setText("Bins:");
 
        SizeBar->addWidget(label_5);
 
@@ -193,8 +204,7 @@
        gridLayout->addLayout(SizeBar, 3, 1, 1, 1);
 
        label_6 = new QLabel(this);
-       label_6->setObjectName(QString::fromUtf8("label_6"));
-       label_6->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
+       label_6->setText("Base:");
 
        gridLayout->addWidget(label_6, 4, 0, 1, 1);
 
@@ -267,6 +277,7 @@
        BackgroundPage.ArrangementCombo->addItem("Centered", Plasma::Wallpaper::CenteredResize);
        //BackgroundPage.ArrangementCombo->addItem("Tiled", Plasma::Wallpaper::TiledResize);
        //BackgroundPage.ArrangementCombo->addItem("Center Tiled", Plasma::Wallpaper::CenterTiledResize);
+
        for (x = 0; x < BackgroundPage.ArrangementCombo->count(); ++x) 
        {
             if (Settings.Arrangement == BackgroundPage.ArrangementCombo->itemData(x).value<int>())
@@ -307,13 +318,13 @@
 
        gridLayout->addWidget(SettingsGroup, 5, 0, 1, 2);
 
-// #ifndef UI_QT_NO_SHORTCUT
-//        label_2->setBuddy(ColorBtn);
-//        label_3->setBuddy(RefreshCombo);
-//        label_4->setBuddy(WidthSpinner);
-// #endif // QT_NO_SHORTCUT
-// 
-//        retranslateUi(this);
+#ifndef UI_QT_NO_SHORTCUT
+       label_2->setBuddy(ColorBtn);
+       label_3->setBuddy(RefreshCombo);
+       label_4->setBuddy(WidthSpinner);
+#endif // QT_NO_SHORTCUT
+
+     //retranslateUi(this);
 
        BaseCombo->setCurrentIndex(1);
        SettingsGroup->setCurrentIndex(0);
@@ -358,7 +369,7 @@ void   ConfigWidget::openDialogOkay()
         if (!pImageListModel->contains(pathname))
         {
             pImageListModel->addBackground(pathname);
-            Settings.History << pathname;
+            Settings.History.append(pathname);
         }
 
             index = pImageListModel->indexOf(pathname);
@@ -417,7 +428,7 @@ void   ConfigWidget::imageChanged(const QModelIndex& index)
     {
         Plasma::Package* package = pImageListModel->package(index.row());
 
-        if (package->structure()->contentsPrefixPaths().isEmpty())
+        if (package->structure()->contentsPrefix().isEmpty())
             imageChanged(package->filePath("preferred"));
             else
             imageChanged(package->path());
@@ -447,6 +458,7 @@ void   ConfigWidget::desktopSelected(int index)
 void   ConfigWidget::desktopRuleCompleted(QString text)
 {
        Settings.Rules[pDesktopList->getIndex()] = text;
+       emit apply(true);
 }
 
 void   ConfigWidget::_async_start()

@@ -79,6 +79,7 @@ struct GlobalConfig
           GlobalConfig(KConfigGroup&);
           GlobalConfig(const GlobalConfig&);
  virtual  ~GlobalConfig();
+          void  spit();
 };
 
 class ConfigWidget :public QWidget

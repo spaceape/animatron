@@ -41,12 +41,13 @@ class DesktopList :public QWidget
 {
            Q_OBJECT
 
-           QImage mDesktopImage;
+           QImage imgDesktop;
+           QImage imgDeskAll;
            QFont mDesktopFont;
-           QSize mItemSize;
-           QRect mItemRect;
-           QSizeF mBoardSize;
-           QPointF mBoardOffset;
+           float mItemWidth;
+           float mSlideOffset;
+           float mSlideWidth;
+           QRectF mItemRect;
 
  typedef vector<string> v_desktop_t;
  typedef v_desktop_t::iterator v_desktop_i;
@@ -54,7 +55,8 @@ class DesktopList :public QWidget
            v_desktop_t items;
 
            bool   minside;
-           QPoint mpointer;
+           QPointF mpointer;
+           QPointF mpivot;
 
  typedef map<int, float> m_timer_t;
  typedef m_timer_t::iterator m_timer_i;
@@ -76,7 +78,8 @@ class DesktopList :public QWidget
  protected:
            void updateitems();
            void updateinterface();
-           int  traceitem(QPoint);
+           void updatepivot();
+           int  traceitem(QPointF);
 
            void enterEvent(QEvent*);
            void leaveEvent(QEvent*);

@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>desktop.png</file>
+        <file>desktop-all.png</file>
     </qresource>
 </RCC>

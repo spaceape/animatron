@@ -92,8 +92,10 @@ class Scene :public Thingy
            void reset(SceneConfig& config);
            uint getLockFlags();
            void setLockFlags(uint);
-           bool getEnabled();
-           void setEnabled(bool);
+           bool getActive();
+           void setActive(bool);
+           //bool getEnabled();
+           //void setEnabled(bool);
 
            bool sync(float dt);
            void render(QPainter* dev);
