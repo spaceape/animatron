@@ -69,15 +69,27 @@ color: rgb(255, 255, 255);</string>
      </property>
      <item>
       <widget class="QToolButton" name="PrevDesktopBtn">
+       <property name="mouseTracking">
+        <bool>true</bool>
+       </property>
        <property name="text">
         <string/>
+       </property>
+       <property name="autoRaise">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QToolButton" name="NextDesktopBtn">
+       <property name="mouseTracking">
+        <bool>true</bool>
+       </property>
        <property name="text">
         <string/>
+       </property>
+       <property name="autoRaise">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -94,10 +106,13 @@ color: rgb(255, 255, 255);</string>
      <item>
       <widget class="QToolButton" name="AddRuleBtn">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
+       </property>
+       <property name="mouseTracking">
+        <bool>true</bool>
        </property>
        <property name="contextMenuPolicy">
-        <enum>Qt::DefaultContextMenu</enum>
+        <enum>Qt::CustomContextMenu</enum>
        </property>
        <property name="text">
         <string/>
@@ -107,13 +122,19 @@ color: rgb(255, 255, 255);</string>
        </property>
        <property name="popupMode">
         <enum>QToolButton::MenuButtonPopup</enum>
+       </property>
+       <property name="autoRaise">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QToolButton" name="RemRuleBtn">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
+       </property>
+       <property name="mouseTracking">
+        <bool>true</bool>
        </property>
        <property name="text">
         <string/>
@@ -124,21 +145,8 @@ color: rgb(255, 255, 255);</string>
        <property name="popupMode">
         <enum>QToolButton::MenuButtonPopup</enum>
        </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="ClearRuleBtn">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="checkable">
-        <bool>false</bool>
-       </property>
-       <property name="popupMode">
-        <enum>QToolButton::MenuButtonPopup</enum>
+       <property name="autoRaise">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

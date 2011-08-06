@@ -30,6 +30,7 @@
 #include <QWidget>
 #include <QStringList>
 #include <QTimer>
+#include <QMenu>
 #include <QtDBus>
 #include <KWindowInfo>
 #include <map>
@@ -94,11 +95,86 @@ class DesktopList :public QWidget
  virtual  ~DesktopList();
 
            int getIndex();
+           void setIndex(int index);
+           void context_message(char* const) {};
+
            void shout();
 
  public slots:
+           void prev();
+           void next();
+
  signals:
            void IndexChanged(int);
 };
 
+class DesktopMenu :public QMenu
+{
+ friend class DesktopRule;
+
+           Q_OBJECT
+
+ private slots:
+           void _onshow();
+           void _onhide();
+
+ protected:
+           DesktopList* controller;
+
+ virtual   void  showing() {}
+ virtual   void  hiding() {}
+ virtual   void  hit(char* const) = 0;
+ public:
+           DesktopMenu(DesktopList* pController);
+ virtual   ~DesktopMenu();
+};
+
+class DesktopRule :public QAction
+{
+           Q_OBJECT
+
+           DesktopMenu* menu;
+           QString rule;
+
+  private slots:
+           void _hit();
+
+  public:
+           DesktopRule(DesktopMenu* pMenu, QString qActionText, QIcon qActionIcon, QString qRuleText);
+  virtual ~DesktopRule();
+};
+
+
+class AddRuleMenu :public DesktopMenu
+{
+           Q_OBJECT
+
+ protected:
+           void showing();
+           void hiding();
+           void hit(char* const);
+
+ public:
+           AddRuleMenu(DesktopList* pController);
+ virtual   ~AddRuleMenu();
+
+ signals:
+           void perform(QString);
+};
+
+class RemRuleMenu :public DesktopMenu
+{
+           Q_OBJECT
+
+ protected:
+           void showing();
+           void hiding();
+           void hit(char* const);
+ public:
+           RemRuleMenu(DesktopList* pController);
+ virtual   ~RemRuleMenu();
+
+ signals:
+           void perform(QString);
+};
 #endif

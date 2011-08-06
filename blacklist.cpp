@@ -31,6 +31,7 @@
 #include <QPainter>
 #include <qevent.h>
 #include <KWindowSystem>
+#include <KIcon>
 #include "blacklist.h"
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
@@ -77,9 +78,33 @@ int    DesktopList::getIndex()
        return index;
 }
 
+void   DesktopList::setIndex(int x)
+{
+   if (x < 0)
+       return;
+
+   if (x < items.size())
+   {
+       index = x;
+
+       updateinterface();
+       emit IndexChanged(index);
+   }
+}
+
 void   DesktopList::shout()
 {
        emit IndexChanged(index);
+}
+
+void   DesktopList::prev()
+{
+       setIndex(index - 1);
+}
+
+void   DesktopList::next()
+{
+       setIndex(index + 1);
 }
 
 void   DesktopList::deskNameChanged()
@@ -219,13 +244,8 @@ void   DesktopList::mousePressEvent(QMouseEvent* ev)
        {
            if (index != trace)
            {
-               index = trace;
-               resync = true;
-
-               emit IndexChanged(index);
+               setIndex(trace);
            }
-
-           updateinterface();
        }
    }
 }
@@ -304,6 +324,144 @@ void   DesktopList::paintEvent(QPaintEvent*)
        }
 
        resync = false;
+}
+
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+       DesktopMenu::DesktopMenu(DesktopList* pController)
+       :QMenu(NULL)
+{
+       controller = pController;
+       connect(this, SIGNAL(aboutToShow()), this, SLOT(_onshow()));
+       connect(this, SIGNAL(aboutToHide()), this, SLOT(_onhide()));
+}
+
+       DesktopMenu::~DesktopMenu()
+{
+}
+
+void   DesktopMenu::_onshow()
+{
+       showing();
+}
+
+void   DesktopMenu::_onhide()
+{
+       hiding();
+}
+
+
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+       DesktopRule::DesktopRule(DesktopMenu* pMenu, QString qActionText, QIcon qActionIcon, QString qRuleText)
+       :QAction(qActionIcon, qActionText, NULL)
+{
+       menu = pMenu;
+       rule = qRuleText;
+
+       connect(this, SIGNAL(triggered(bool)), this, SLOT(_hit()));
+}
+
+       DesktopRule::~DesktopRule()
+{
+       printf("Rule %p destroyed\n", this);
+}
+
+
+void   DesktopRule::_hit()
+{
+       menu->hit(rule.toAscii().data());
+}
+
+
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+       AddRuleMenu::AddRuleMenu(DesktopList* pController)
+       :DesktopMenu(pController)
+{
+}
+
+       AddRuleMenu::~AddRuleMenu()
+{
+}
+
+void   AddRuleMenu::hit(char* const text)
+{
+       emit perform(QString(text));
+}
+
+void   AddRuleMenu::showing()
+{
+       int  x;
+
+     //dispose previous items
+//        try
+//        {
+//            for (x = 0; x != actions().count(); ++x)
+//            {
+//                delete actions().at(x);
+//            }
+//        }
+//        catch(...)
+//        {
+//            fprintf(stderr, "[AddRuleMenu:%p]: Algorithm `dispose previous items` crashed :(\n");
+//        }
+
+       clear();
+
+
+     //populate menu
+       QList<WId> list = KWindowSystem::windows();
+
+       int  desktop = controller->getIndex();
+       WId  id;
+       KWindowInfo* info;
+
+       static int window_supported_types = NET::NormalMask | NET::DialogMask | NET::OverrideMask | NET::UtilityMask |
+                  NET::DesktopMask | NET::DockMask | NET::TopMenuMask | NET::SplashMask |
+                  NET::ToolbarMask | NET::MenuMask;
+
+       for (x = 0; x != list.count(); ++x)
+       {
+            id   = list.at(x);
+            info = new KWindowInfo(id, NET::WMDesktop | NET::WMWindowType, NET::WM2WindowClass);
+
+            if (info->windowType(window_supported_types) == NET::Normal)
+                if (!desktop || info->desktop() == desktop)
+                    addAction(new DesktopRule(this, info->windowClassName(), QIcon(KWindowSystem::icon(id)), info->windowClassName()));
+       }
+
+       addSeparator();
+       addAction(new DesktopRule(this, "Always disabled", QIcon(), "*"));
+       addAction(new DesktopRule(this, "Always enabled", QIcon(), "#"));
+}
+
+void   AddRuleMenu::hiding()
+{
+}
+
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+       RemRuleMenu::RemRuleMenu(DesktopList* pController)
+       :DesktopMenu(pController)
+{
+}
+
+       RemRuleMenu::~RemRuleMenu()
+{
+}
+
+void   RemRuleMenu::hit(char* const text)
+{
+       controller->context_message("Then maybe wait for the next release");
+       emit perform(QString(text));
+}
+
+
+void   RemRuleMenu::showing()
+{
+       clear();
+       addAction(new DesktopRule(this, "Too lazy to edit the rules by hand?", KIcon("emoticon"), ""));
+}
+
+void   RemRuleMenu::hiding()
+{
 }
 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 

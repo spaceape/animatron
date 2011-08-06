@@ -114,4 +114,8 @@ class DesktopSwitch :public QObject
  signals:
            void set(bool);
 };
+
+/*TODO:
+ *Create rule validator
+*/
 #endif

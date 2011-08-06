@@ -38,8 +38,8 @@
        Color = QColor::fromRgb(0, 255, 0);
        BackgroundColor = QColor::fromRgb(0, 0, 0);
        Refresh = 25;
-       HorizontalRezolution = 128;
-       VerticalRezolution = 96;
+       HorizontalRezolution = 64;
+       VerticalRezolution = 48;
        Bins = 8;
        Base = 16;
        Style = "";
@@ -314,6 +314,21 @@ void   GlobalConfig::spit()
        connect(pDesktopList, SIGNAL(IndexChanged(int)), this, SLOT(desktopSelected(int)));
        pDesktopList->shout();
 
+       FunctionalityPage.PrevDesktopBtn->setIcon(KIcon("arrow-left"));
+       connect(FunctionalityPage.PrevDesktopBtn, SIGNAL(clicked(bool)), pDesktopList, SLOT(prev()));
+
+       FunctionalityPage.NextDesktopBtn->setIcon(KIcon("arrow-right"));
+       connect(FunctionalityPage.NextDesktopBtn, SIGNAL(clicked(bool)), pDesktopList, SLOT(next()));
+
+       pAddRuleMenu = new AddRuleMenu(pDesktopList);
+       FunctionalityPage.AddRuleBtn->setIcon(KIcon("list-add"));
+       FunctionalityPage.AddRuleBtn->setMenu(pAddRuleMenu);
+       connect(pAddRuleMenu, SIGNAL(perform(QString)), this, SLOT(desktopRuleAdd(QString)));
+
+       pRemRuleMenu = new RemRuleMenu(pDesktopList);
+       FunctionalityPage.RemRuleBtn->setIcon(KIcon("list-remove"));
+       FunctionalityPage.RemRuleBtn->setMenu(pRemRuleMenu);
+       connect(pRemRuleMenu, SIGNAL(perform(QString)), this, SLOT(destopRuleRemove(QString)));
 
        FunctionalitySettings->setObjectName(QString::fromUtf8("FunctionalitySettings"));
        SettingsGroup->addTab(FunctionalitySettings, QString());
@@ -479,6 +494,28 @@ void   ConfigWidget::desktopRuleCompleted(QString text)
 {
        Settings.Rules[pDesktopList->getIndex()] = text;
        emit apply(true);
+}
+
+// NOTE:
+// desktopRule-- methods are the lame substitute of a proper validator
+
+void   ConfigWidget::desktopRuleAdd(QString text)
+{
+       QString rule = FunctionalityPage.RuleEdit->text();
+
+       if (rule.length())
+       {
+           if (*rule.end() != ' ')
+               rule.push_back(' ');
+       }
+
+       rule += text;
+
+       FunctionalityPage.RuleEdit->setText(rule);
+}
+
+void   ConfigWidget::desktopRuleRemove(QString )
+{
 }
 
 void   ConfigWidget::_async_start()

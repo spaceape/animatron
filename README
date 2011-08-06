@@ -12,8 +12,7 @@ sudo make install
 optionally, test with
 plasmawallpaperviewer -p animatron
 
-You might need to run kbuildsycoca4
-in order to get the .desktop file recognized.
+You might need to run kbuildsycoca4 in order to get the .desktop file recognized.
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 Changelog:
@@ -28,7 +27,13 @@ v 0.1
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 BUGS:
-none that i can put my finger on at atm
+* sometimes, especially on slow computers, animation doesn't enable when it's supposed to (like
+  it misses the desktop-switch and window-close events); opening and closing the config dialog
+  fixes the issue. [rare]
+* sometimes the "Desktops" widget in config doesn't init properly, it looks dead and you can't
+  click on it. [rare]
+* popup menu on "Add Rule" button leaks memory [just when you pop it]
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
 Enjoy,
 spaceape

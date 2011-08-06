@@ -36,6 +36,7 @@
 
 #include <QAction>
 #include <QLabel>
+#include <QMenu>
 #include <QHeaderView>
 #include <QButtonGroup>
 #include <QSpacerItem>
@@ -52,6 +53,7 @@
 #include "ui_backgroundpage.h"
 #include "ui_functionpage.h"
 
+class QMenu;
 class BackgroundListModel;
 class KFileDialog;
 namespace KNS3 {
@@ -59,6 +61,8 @@ class DownloadDialog;
 }
 
 class DesktopList;
+class AddRuleMenu;
+class RemRuleMenu;
 
 struct GlobalConfig
 {
@@ -125,6 +129,8 @@ class ConfigWidget :public QWidget
            Ui_BackgroundPage BackgroundPage;
 
            DesktopList* pDesktopList;
+           AddRuleMenu* pAddRuleMenu;
+           RemRuleMenu* pRemRuleMenu;
            Ui_FunctionPage FunctionalityPage;
 
  private slots:
@@ -137,8 +143,13 @@ class ConfigWidget :public QWidget
            void imagesRemove(QString);
            void imageChanged(const QModelIndex&);
            void imageChanged(QString);
+         //void prevDesktop();
+         //void nextDesktop();
            void desktopSelected(int);
            void desktopRuleCompleted(QString);
+           void desktopRuleAdd(QString);
+           void desktopRuleRemove(QString);
+
            void _async_start();
            void modified();
 
