@@ -64,6 +64,7 @@ struct GlobalConfig
 {
           QFont Font;
           QColor Color;
+          QColor BackgroundColor;
           int   Refresh;
           int   HorizontalRezolution;
           int   VerticalRezolution;
@@ -87,29 +88,31 @@ class ConfigWidget :public QWidget
            Q_OBJECT
            GlobalConfig& Settings;
 
-           QGridLayout *gridLayout;
            QLabel *label_1;
-           QHBoxLayout *FontBar;
-           KFontRequester *FontChooser;
            QLabel *label_2;
-           QHBoxLayout *ColorBar;
-           KColorButton *ColorBtn;
-           QSpacerItem *Spacer1;
            QLabel *label_3;
-           QHBoxLayout *RefreshBar;
-           KIntSpinBox *RefreshCombo;
-           QSpacerItem *Spacer3;
            QLabel *label_4;
+           QLabel *label_5;
+           QLabel *label_6;
+
+           QGridLayout *gridLayout;
+           QHBoxLayout *FontBar;
+           QHBoxLayout *ColorBar;
+           QHBoxLayout *RefreshBar;
            QHBoxLayout *SizeBar;
+           QHBoxLayout *BaseBar;
+           QSpacerItem *Spacer1;
+           QSpacerItem *Spacer2;
+           QSpacerItem *Spacer3;
+           QSpacerItem *Spacer4;
+
+           KFontRequester *FontChooser;
+           KColorButton *ColorBtn;
+           KIntSpinBox *RefreshCombo;
            KIntSpinBox *WidthSpinner;
            KIntSpinBox *HeightSpinner;
-           QLabel *label_5;
            KIntSpinBox *CountSpinner;
-           QSpacerItem *Spacer2;
-           QLabel *label_6;
-           QHBoxLayout *BaseBar;
            KComboBox *BaseCombo;
-           QSpacerItem *Spacer4;
            KTabWidget *SettingsGroup;
            QWidget *BackgroundSettings;
            QWidget *FunctionalitySettings;

@@ -36,6 +36,7 @@
 {
        Font = QFont("Courier New", 8);
        Color = QColor::fromRgb(0, 255, 0);
+       BackgroundColor = QColor::fromRgb(0, 0, 0);
        Refresh = 25;
        HorizontalRezolution = 128;
        VerticalRezolution = 96;
@@ -53,6 +54,7 @@
 {
        Font = src.Font;
        Color = src.Color;
+       BackgroundColor = src.BackgroundColor;
        Refresh = src.Refresh;
        HorizontalRezolution = src.HorizontalRezolution;
        VerticalRezolution = src.VerticalRezolution;
@@ -73,6 +75,7 @@ void   GlobalConfig::spit()
 {
        printf("font=[%s, %d]\n", Font.family().toAscii().data(), Font.pixelSize());
        printf("color=[%.2x %.2x %.2x]\n", Color.red(), Color.green(), Color.blue());
+       printf("bgcolor=[%.2x %.2x %.2x]\n", BackgroundColor.red(), BackgroundColor.green(), BackgroundColor.blue());
        printf("refresh=%d\n", Refresh);
        printf("res=[%dx%d]\n", HorizontalRezolution, VerticalRezolution);
        printf("bins=%d\n", Bins);
@@ -379,6 +382,11 @@ void   ConfigWidget::openDialogOkay()
             BackgroundPage.ImageList->setCurrentIndex(index);
         }
    }
+
+   if (BackgroundPage.ArrangementCombo->currentIndex() == 0)
+   {
+       BackgroundPage.ArrangementCombo->currentText() = 1;
+   }
 }
 
 void   ConfigWidget::openDialogDone()
@@ -400,6 +408,12 @@ void   ConfigWidget::imagesBrowse()
 void   ConfigWidget::browseDialogOkay()
 {
        pImageListModel->reload();
+
+   if (BackgroundPage.ArrangementCombo->currentIndex() == 0)
+   {
+       BackgroundPage.ArrangementCombo->currentText() = 1;
+   }
+
        emit apply(true);
 }
 
@@ -438,8 +452,14 @@ void   ConfigWidget::imageChanged(const QModelIndex& index)
 void   ConfigWidget::imageChanged(QString pathname)
 {
    if (pathname != Settings.Style)
-   {   Settings.Style = pathname;
+   {
+       Settings.Style = pathname;
        emit apply(true);
+   }
+
+   if (BackgroundPage.ArrangementCombo->currentIndex() == 0)
+   {
+       BackgroundPage.ArrangementCombo->currentText() = 1;
    }
 
        fprintf(stderr, "Changed background image to `%s`...\n", pathname.toAscii().data());

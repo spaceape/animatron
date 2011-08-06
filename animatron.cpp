@@ -68,6 +68,7 @@ void   Animatron:: init(const KConfigGroup& Config)
 
        mGlobalConfig.Font = Config.readEntry("font", mGlobalConfig.Font);
        mGlobalConfig.Color = Config.readEntry("color", mGlobalConfig.Color);
+       mGlobalConfig.BackgroundColor = Config.readEntry("bgcolor", mGlobalConfig.BackgroundColor);
        mGlobalConfig.Refresh = Config.readEntry("refresh", mGlobalConfig.Refresh);
        mGlobalConfig.HorizontalRezolution = Config.readEntry("hr", mGlobalConfig.HorizontalRezolution);
        mGlobalConfig.VerticalRezolution = Config.readEntry("vr", mGlobalConfig.VerticalRezolution);
@@ -119,9 +120,9 @@ void   Animatron:: init(const KConfigGroup& Config)
 
        mScene.reset(mSceneConfig);
        mSize = QSizeF(0.0f, 0.0f);
-       mStyleRect = QRectF(1.0f, 1.0f, 1.0f, 1.0f);
-       mStyleSrcRect =  QRectF(0.0f, 0.0f, 0.0f, 0.0f);
-       mStyleDestRect = QRectF(0.0f, 0.0f, 0.0f, 0.0f);
+       sheet = mStyle.rect();
+       copy  = QRectF(0.0f, 0.0f, 0.0f, 0.0f);
+       erase = QRectF(0.0f, 0.0f, 0.0f, 0.0f);
        pTimer->start();
 
        ready = true;
@@ -135,6 +136,7 @@ void   Animatron:: save(KConfigGroup& Config)
 
        Config.writeEntry("font", mGlobalConfig.Font);
        Config.writeEntry("color", mGlobalConfig.Color);
+       Config.writeEntry("bgcolor", mGlobalConfig.BackgroundColor);
        Config.writeEntry("refresh", mGlobalConfig.Refresh);
        Config.writeEntry("hr", mGlobalConfig.HorizontalRezolution);
        Config.writeEntry("vr", mGlobalConfig.VerticalRezolution);
@@ -188,46 +190,82 @@ void   Animatron::sync()
 void   Animatron:: paint(QPainter* painter, const QRectF& exposedRect)
 {
        bool  resize = mSize != boundingRect().size();
-       bool  reset  = mStyleRect != mStyleSrcRect;
+       bool  have_image = mGlobalConfig.Arrangement != 0.0f && mStyle.isNull() == false;
+       bool  need_erase = !have_image;
 
    if (resize)
-   {   mSize  = boundingRect().size();
+   {
+       mSize = boundingRect().size();
        mSceneConfig.width = mSize.width();
        mSceneConfig.height = mSize.height();
        mScene.reset(mSceneConfig);
+
+       sheet.moveCenter(boundingRect().center());
    }
 
-   if (resize || reset)
+       copy = exposedRect;
+       erase = exposedRect;
+
+       QRectF src;
+
+   if (have_image)
    {
-       mStyleSrcRect = QRectF(mStyle.rect()).intersected(boundingRect());
-       mStyleDestRect = mStyleSrcRect;
-       mStyleSrcRect.moveCenter(mStyle.rect().center());
-       mStyleDestRect.moveCenter(boundingRect().center());
-       mStyleRect = mStyleSrcRect;
-   }
+       copy &= sheet;
 
-   //blit the background (saves all the per-pixel-products that blending does)
-       painter->setCompositionMode(QPainter::CompositionMode_Source);
-       painter->setClipRect(exposedRect);
-
-   if (!mGlobalConfig.Arrangement || mStyle.width() < boundingRect().width() || mStyle.height() < boundingRect().height())
-       painter->fillRect(exposedRect, Qt::black);
-
-   if (mGlobalConfig.Arrangement)
-   {
-       if (!mStyle.isNull())
+       if (copy.width() == erase.width())
        {
-           QRectF dst = mStyleDestRect.intersected(exposedRect);
-           QRectF src = QRectF(exposedRect.x() + mStyleSrcRect.x(), exposedRect.y() + mStyleSrcRect.y(), dst.width(), dst.height());
+           if (copy.top() > erase.top())
+           {
+               painter->fillRect(erase.left(), erase.top(), erase.width(), copy.top() - erase.top(), mGlobalConfig.BackgroundColor);
+           }
 
-           painter->drawImage(dst, mStyle, src);
+           if (copy.bottom() < erase.bottom())
+           {
+               painter->fillRect(erase.left(), copy.bottom(), erase.width(), erase.bottom() - copy.bottom(), mGlobalConfig.BackgroundColor);
+           }
+       }   else
+       {
+           need_erase = true;
        }
 
+       if (copy.height() == erase.height())
+       {
+           if (copy.left() > erase.left())
+           {
+               painter->fillRect(erase.left(), erase.top(), copy.left() - erase.left(), erase.height(), mGlobalConfig.BackgroundColor);
+           }
+
+           if (copy.right() < erase.right())
+           {
+               painter->fillRect(copy.right(), erase.top(), erase.right() - copy.right(), erase.height(), mGlobalConfig.BackgroundColor);
+           }
+       }   else
+       {
+           need_erase = true;
+       }
+
+       src = copy.translated(-sheet.left(), -sheet.top());
+
+       have_image  = copy.width() * copy.height() != 0.0f;
+     //need_erase &= erase.width() * erase.height() != 0.0f;
    }
 
+   if (need_erase)
+   {
+       painter->fillRect(erase, mGlobalConfig.BackgroundColor);
+   }
+
+   if (have_image)
+   {
+       painter->drawImage(copy, mStyle, src);
+   }
+
+   if (sceners)
+   {
        painter->setPen(mGlobalConfig.Color);
        painter->setFont(mGlobalConfig.Font);
        mScene.render(painter);
+   }
 
        sceners = false;
 }

@@ -51,9 +51,10 @@ class Animatron: public Plasma::Wallpaper
            DesktopSwitch Act;
 
            QImage   mStyle;
-           QRectF   mStyleRect;
-           QRectF   mStyleSrcRect;
-           QRectF   mStyleDestRect;
+           QRectF   sheet;
+           QRectF   copy;
+           QRectF   erase;
+
            QSizeF   mSize;
 
            float    scenedt;
