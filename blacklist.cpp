@@ -42,6 +42,7 @@
 {
        imgDesktop.load(":/desktop.png");
        imgDeskAll.load(":/desktop-all.png");
+       imgLogo.load(":/logo.png");
        mDesktopFont = QFont("DejaVu Sans", 8);
        setMinimumHeight(128);
        setMaximumHeight(128);
@@ -264,6 +265,7 @@ void   DesktopList::paintEvent(QPaintEvent*)
        QPainter dev(this);
        dev.setClipRect(geometry());
        dev.fillRect(geometry(), Qt::black);
+       dev.drawImage(width() - 256, 0, imgLogo);
 
        dev.setPen(Qt::white);
        dev.drawText(QRect(4, height() - 24, width() - 8, 24), Qt::AlignVCenter, items[index].c_str());

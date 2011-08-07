@@ -161,6 +161,7 @@ void   DesktopSwitch::hash()
        }
 
        rehash = !enabled;
+       fprintf(stderr, "Rehashed\n");
    }
 }
 
@@ -271,8 +272,9 @@ bool   DesktopSwitch::sync()
 
        suspendall = query(0,  pMatchList.at(0).toAscii().data());
 
-       suspendcurrent = suspendall ? false : query(KWindowSystem::currentDesktop(), pMatchList.at(KWindowSystem::currentDesktop()).toAscii().data());
+       suspendcurrent = suspendall ? true : query(KWindowSystem::currentDesktop(), pMatchList.at(KWindowSystem::currentDesktop()).toAscii().data());
 
+       fprintf(stderr, "Synced\n");
        return suspendall || suspendcurrent;
 }
 
@@ -337,14 +339,16 @@ void   DesktopSwitch::setEnabled(bool value)
    {
        if (enabled = value)
        {
-           emit set( !sync() );
-
+           rehash = true;
            connect(KWindowSystem::self(), SIGNAL(desktopNamesChanged()), this, SLOT(deskNameChanged()));
            connect(KWindowSystem::self(), SIGNAL(numberOfDesktopsChanged(int)), this, SLOT(deskCountChanged()));
            connect(KWindowSystem::self(), SIGNAL(currentDesktopChanged(int)), this, SLOT(deskSwitched(int)));
            connect(KWindowSystem::self(), SIGNAL(windowAdded(WId)), this, SLOT(wndAdded(WId)));
            connect(KWindowSystem::self(), SIGNAL(windowRemoved(WId)), this, SLOT(wndRemoved(WId)));
            connect(KWindowSystem::self(), SIGNAL(activeWindowChanged(WId)), this, SLOT(wndActiveChanged(WId)));
+
+           emit set( !sync() );
+
            fprintf(stderr, "DS online\n");
        }   else
        {
@@ -356,9 +360,9 @@ void   DesktopSwitch::setEnabled(bool value)
            disconnect(KWindowSystem::self(), SIGNAL(activeWindowChanged(WId)), this, SLOT(wndActiveChanged(WId)));
 
            clear();
-           fprintf(stderr, "DS offline\n");
          //suspendall = false;
          //suspendcurrent = false;
+           fprintf(stderr, "DS offline\n");
        }
    }
 }

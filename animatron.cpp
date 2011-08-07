@@ -168,14 +168,14 @@ void   Animatron::updateScreenshot(QPersistentModelIndex index)
 
 void   Animatron::hard_set(bool value)
 {
-       fprintf(stderr, "Hard b=%d\n", value);
+       fprintf(stderr, "Hard set=%d\n", value);
        Act.setEnabled(value);
-       mScene.setActive(value);
+       mScene.setActive(Act);
 }
 
 void   Animatron::soft_set(bool value)
 {
-       fprintf(stderr, "Soft b=%d\n", value);
+       fprintf(stderr, "Soft set=%d\n", value);
        mScene.setActive(value);
 }
 
@@ -260,7 +260,8 @@ void   Animatron:: paint(QPainter* painter, const QRectF& exposedRect)
        painter->drawImage(copy, mStyle, src);
    }
 
-   if (sceners)
+   if (sceners ||
+      (exposedRect.width() == boundingRect().width() && exposedRect.height() == boundingRect().height())) //<- no flickering on desktop switch
    {
        painter->setPen(mGlobalConfig.Color);
        painter->setFont(mGlobalConfig.Font);

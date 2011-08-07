@@ -167,9 +167,9 @@ void   GlobalConfig::spit()
        WidthSpinner = new KIntSpinBox(this);
        WidthSpinner->setObjectName(QString::fromUtf8("WidthSpinner"));
        WidthSpinner->setMinimumSize(QSize(64, 0));
-       WidthSpinner->setMinimum(64);
+       WidthSpinner->setMinimum(32);
        WidthSpinner->setMaximum(256);
-       WidthSpinner->setSingleStep(2);
+       WidthSpinner->setSingleStep(4);
        WidthSpinner->setValue(Settings.HorizontalRezolution);
        connect(WidthSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
        SizeBar->addWidget(WidthSpinner);
@@ -177,9 +177,9 @@ void   GlobalConfig::spit()
        HeightSpinner = new KIntSpinBox(this);
        HeightSpinner->setObjectName(QString::fromUtf8("HeightSpinner"));
        HeightSpinner->setMinimumSize(QSize(64, 0));
-       HeightSpinner->setMinimum(48);
+       HeightSpinner->setMinimum(24);
        HeightSpinner->setMaximum(256);
-       HeightSpinner->setSingleStep(2);
+       HeightSpinner->setSingleStep(4);
        HeightSpinner->setValue(Settings.VerticalRezolution);
        connect(HeightSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
        SizeBar->addWidget(HeightSpinner);
@@ -194,7 +194,7 @@ void   GlobalConfig::spit()
        CountSpinner->setMinimumSize(QSize(64, 0));
        CountSpinner->setMinimum(4);
        CountSpinner->setMaximum(64);
-       CountSpinner->setSingleStep(4);
+       CountSpinner->setSingleStep(2);
        CountSpinner->setValue(Settings.Bins);
        connect(CountSpinner, SIGNAL(valueChanged(int)), this, SLOT(modified()));
        SizeBar->addWidget(CountSpinner);
@@ -217,7 +217,6 @@ void   GlobalConfig::spit()
        BaseCombo->setObjectName(QString::fromUtf8("BaseCombo"));
        BaseCombo->setMinimumSize(QSize(64, 0));
        BaseCombo->setAutoCompletion(false);
-
        BaseCombo->addItem("10");
        BaseCombo->addItem("16");
        BaseCombo->addItem("36");
@@ -332,7 +331,7 @@ void   GlobalConfig::spit()
 
        FunctionalitySettings->setObjectName(QString::fromUtf8("FunctionalitySettings"));
        SettingsGroup->addTab(FunctionalitySettings, QString());
-       SettingsGroup->setTabText(1, "Functionality");
+       SettingsGroup->setTabText(1, "Quantum Lock");
 
        gridLayout->addWidget(SettingsGroup, 5, 0, 1, 2);
 
@@ -400,7 +399,7 @@ void   ConfigWidget::openDialogOkay()
 
    if (BackgroundPage.ArrangementCombo->currentIndex() == 0)
    {
-       BackgroundPage.ArrangementCombo->currentText() = 1;
+       BackgroundPage.ArrangementCombo->setCurrentIndex(1);
    }
 }
 
@@ -426,7 +425,7 @@ void   ConfigWidget::browseDialogOkay()
 
    if (BackgroundPage.ArrangementCombo->currentIndex() == 0)
    {
-       BackgroundPage.ArrangementCombo->currentText() = 1;
+       BackgroundPage.ArrangementCombo->setCurrentIndex(1);
    }
 
        emit apply(true);
@@ -474,7 +473,7 @@ void   ConfigWidget::imageChanged(QString pathname)
 
    if (BackgroundPage.ArrangementCombo->currentIndex() == 0)
    {
-       BackgroundPage.ArrangementCombo->currentText() = 1;
+       BackgroundPage.ArrangementCombo->setCurrentIndex(1);
    }
 
        fprintf(stderr, "Changed background image to `%s`...\n", pathname.toAscii().data());
@@ -537,9 +536,10 @@ void   ConfigWidget::modified()
        Settings.Font = FontChooser->font();
        Settings.Color = ColorBtn->color();
      //Settings.Refresh = RefreshCombo->value();
-     //Settings.HorizontalRezolution = WidthSpinner->value();
-     //Settings.VerticalRezolution = HeightSpinner->value();
-     //Settings.Bins = HeightSpinner->value();
+       Settings.HorizontalRezolution = WidthSpinner->value();
+       Settings.VerticalRezolution = HeightSpinner->value();
+       Settings.Bins = CountSpinner->value();
+       Settings.Base = BaseCombo->currentText().toInt();
 
        Settings.Arrangement = BackgroundPage.ArrangementCombo->itemData(
                 BackgroundPage.ArrangementCombo->currentIndex()

@@ -110,7 +110,7 @@ class DesktopSwitch :public QObject
            void setEnabled(bool);
 
            DesktopSwitch* ptr() {return this;}
-           operator bool() {return suspendall | suspendcurrent;}
+           operator bool() {return !(suspendall | suspendcurrent);}
  signals:
            void set(bool);
 };

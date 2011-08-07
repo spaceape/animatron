@@ -78,8 +78,8 @@ void   Scene::reset(SceneConfig& config)
 {
        width = config.width;
        height = config.height;
-       screen.setWidth(64);
-       screen.setHeight(48);
+       screen.setWidth(config.rez_x);
+       screen.setHeight(config.rez_y);
        space = 1;
        base  = config.ffbase;
      //lock  = ENA_ALL;

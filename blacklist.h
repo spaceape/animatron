@@ -44,6 +44,7 @@ class DesktopList :public QWidget
 
            QImage imgDesktop;
            QImage imgDeskAll;
+           QImage imgLogo;
            QFont mDesktopFont;
            float mItemWidth;
            float mSlideOffset;
