@@ -1,11 +1,11 @@
 Animatron plasma wallpaper for KDE4.x
 
-1. Description:
+1. Description
 Animatron is an animated plasma wallpaper plugin for KDE4. It draws fast streams of random text
 on top of a colored or graphic background. The streams fade out at a different rate and
 occasionaly spawn into fresh new ones, making your desktop look very cinematic and interesting.
 
-2. Guide:
+2. Guide
 Due to a fast rate at which the background needs to be refreshed, the performance drop is quite
 significant and you sometimes can't afford the wasted flops underneath your active window.
 For this purpose, Animatron includes functionality to stop the animations and free resources
@@ -31,7 +31,7 @@ When animations are stopped, Animatron looks and behaves like an everyday image 
 wallpaper, and as soon as you close the blacklisted app (or apps) or switch to a desktop that
 allows it, the ASCII madness resumes shortly.
 
-3. Config options:
+3. Config options
 Font, Color, Grid - style and number of positions
 Bins - a give-or-take number for how many streams can there be on screen at a time
 Base - sets up a range for the random number generator; Base 16 means that it will spit out
@@ -55,12 +55,19 @@ plasmawallpaperviewer -p animatron
 You might need to run kbuildsycoca4 in order to get the .desktop file recognized.
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+Repository:
+https://github.com/spaceape/animatron
+
+Latest stable version on branch 'stable'
+Latest dev version on branch master
+
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 Changelog:
 
 v 0.2
-    KDE-ish background image loading support
-    reconstructed config dialog support
+    reconstructed config-dialog
     advanced disable conditions with power-management awareness
+    KDE-ish background image loading support
 
 v 0.1
     basic background-image loading support

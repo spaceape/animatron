@@ -84,6 +84,11 @@ public:
     QModelIndex indexOf(const QString &path) const;
     virtual bool contains(const QString &bg) const;
 
+    static QStringList findAllBackgrounds(Plasma::Wallpaper *structureParent,
+                                                       const BackgroundListModel *container,
+                                                       const QStringList &path);
+    static void initProgressDialog(KProgressDialog *dialog);
+
     void setWallpaperSize(const QSize& size);
     void setResizeMethod(Plasma::Wallpaper::ResizeMethod resizeMethod);
 
@@ -92,8 +97,6 @@ protected Q_SLOTS:
     void showPreview(const KFileItem &item, const QPixmap &preview);
     void previewFailed(const KFileItem &item);
     void sizeFound(const QString &path, const QSize &s);
-    void backgroundsFound(const QStringList &paths, const QString &token);
-    void processPaths(const QStringList &paths);
 
 private:
     QSize bestSize(Plasma::Package *package) const;
@@ -107,30 +110,33 @@ private:
 
     QSize m_size;
     Plasma::Wallpaper::ResizeMethod m_resizeMethod;
-    QString m_findToken;
     QPixmap m_previewUnavailablePix;
 };
 
-class BackgroundFinder : public QThread
+class BackgroundFinder : public QObject
 {
     Q_OBJECT
 
 public:
-    BackgroundFinder(Plasma::Wallpaper *structureParent, const QStringList &p);
-    ~BackgroundFinder();
+    BackgroundFinder(Plasma::Wallpaper *structureParent,
+                     const BackgroundListModel *container,
+                     const QStringList &p,
+                     QEventLoop *eventLoop);
 
-    QString token() const;
+    QStringList papersFound() const;
+
+public slots:
+    void start();
 
 signals:
-    void backgroundsFound(const QStringList &paths, const QString &token);
-
-protected:
-    void run();
+    void finished();
 
 private:
-    Plasma::PackageStructure::Ptr m_structure;
+    Plasma::Wallpaper *m_structureParent;
+    const BackgroundListModel *m_container;
     QStringList m_paths;
-    QString m_token;
+    QStringList m_papersFound;
+    QEventLoop *m_eventLoop;
 };
 
 class BackgroundDelegate : public QAbstractItemDelegate
