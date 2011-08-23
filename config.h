@@ -53,6 +53,8 @@
 #include "ui_backgroundpage.h"
 #include "ui_functionpage.h"
 
+class Animatron;
+
 class QMenu;
 class BackgroundListModel;
 class KFileDialog;
@@ -91,6 +93,7 @@ class ConfigWidget :public QWidget
 {
            Q_OBJECT
            GlobalConfig& Settings;
+           Animatron* Plugin;
 
            QLabel *label_1;
            QLabel *label_2;
@@ -143,6 +146,7 @@ class ConfigWidget :public QWidget
            void imagesRemove(QString);
            void imageChanged(const QModelIndex&);
            void imageChanged(QString);
+           void imageSelected();
          //void prevDesktop();
          //void nextDesktop();
            void desktopSelected(int);
@@ -157,7 +161,7 @@ class ConfigWidget :public QWidget
            void apply(bool);
 
  public:
-           ConfigWidget(QWidget* parent, GlobalConfig& settings);
+           ConfigWidget(QWidget* parent, GlobalConfig& settings, Animatron* plugin);
  virtual   ~ConfigWidget();
 
             QFont getFont();

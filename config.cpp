@@ -24,13 +24,14 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include "config.h"
+#include "imagelist.h"
+#include "blacklist.h"
+#include "animatron.h"
 #include <QTimer>
 #include <QFileInfo>
 #include <kfiledialog.h>
 #include <knewstuff3/downloaddialog.h>
-#include "config.h"
-#include "imagelist.h"
-#include "blacklist.h"
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
        GlobalConfig::GlobalConfig()
 {
@@ -88,9 +89,10 @@ void   GlobalConfig::spit()
 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
 
-       ConfigWidget::ConfigWidget(QWidget* parent, GlobalConfig& settings)
+       ConfigWidget::ConfigWidget(QWidget* parent, GlobalConfig& settings, Animatron* plugin)
        :QWidget(parent),
-        Settings(settings)
+        Settings(settings),
+        Plugin(plugin)
 {
        this->resize(784, 644);
        gridLayout = new QGridLayout(this);
@@ -249,7 +251,7 @@ void   GlobalConfig::spit()
        BackgroundSettings = new QWidget();
        BackgroundPage.setupUi(BackgroundSettings);
        pImageListModel = new BackgroundListModel(instance, this);
-       //pImageListModel->setResizeMethod((ResizeMethod)carrange);
+       pImageListModel->setResizeMethod((Plasma::Wallpaper::ResizeMethod)Settings.Arrangement);
        pImageListModel->setWallpaperSize(QSize(1024, 768));
        pImageListModel->reload(Settings.History);
 
@@ -264,7 +266,7 @@ void   GlobalConfig::spit()
        );
 
        BackgroundPage.ImageList->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-       connect(BackgroundPage.ImageList, SIGNAL(clicked(const QModelIndex&)), this, SLOT(modified()));
+       connect(BackgroundPage.ImageList, SIGNAL(clicked(const QModelIndex&)), this, SLOT(imageSelected()));
 
        BackgroundPage.ImageList->setSpacing(2);
        BackgroundPage.ImageList->setViewMode(QListView::IconMode);
@@ -335,15 +337,6 @@ void   GlobalConfig::spit()
 
        gridLayout->addWidget(SettingsGroup, 5, 0, 1, 2);
 
-#ifndef UI_QT_NO_SHORTCUT
-       label_2->setBuddy(ColorBtn);
-       label_3->setBuddy(RefreshCombo);
-       label_4->setBuddy(WidthSpinner);
-#endif // QT_NO_SHORTCUT
-
-     //retranslateUi(this);
-
-       BaseCombo->setCurrentIndex(1);
        SettingsGroup->setCurrentIndex(0);
 
        connect(this, SIGNAL(apply(bool)), parent, SLOT(settingsChanged(bool)));
@@ -394,12 +387,8 @@ void   ConfigWidget::openDialogOkay()
         if (index.isValid())
         {
             BackgroundPage.ImageList->setCurrentIndex(index);
+            imageSelected();
         }
-   }
-
-   if (BackgroundPage.ArrangementCombo->currentIndex() == 0)
-   {
-       BackgroundPage.ArrangementCombo->setCurrentIndex(1);
    }
 }
 
@@ -422,13 +411,9 @@ void   ConfigWidget::imagesBrowse()
 void   ConfigWidget::browseDialogOkay()
 {
        pImageListModel->reload();
+       pImageListModel->reload(Settings.History);
 
-   if (BackgroundPage.ArrangementCombo->currentIndex() == 0)
-   {
-       BackgroundPage.ArrangementCombo->setCurrentIndex(1);
-   }
-
-       emit apply(true);
+       imageSelected();
 }
 
 void   ConfigWidget::browseDialogDone()
@@ -465,18 +450,39 @@ void   ConfigWidget::imageChanged(const QModelIndex& index)
 
 void   ConfigWidget::imageChanged(QString pathname)
 {
+       QString Style;
+
    if (pathname != Settings.Style)
    {
-       Settings.Style = pathname;
+       if (QDir::isAbsolutePath(pathname))
+       {
+           Plasma::Package package(pathname, Plugin->packageStructure(Plugin));
+           Style = package.filePath("preferred");
+
+        if (Style.isEmpty() || !QFile::exists(Style))
+        {
+            Style = Settings.Style;
+        }
+    } else 
+    {
+      Style = pathname;
+    }
+
+       Settings.Style = Style;
        emit apply(true);
    }
 
+       fprintf(stderr, "Changed background image to `%s`...\n", Style.toAscii().data());
+}
+
+void   ConfigWidget::imageSelected()
+{
    if (BackgroundPage.ArrangementCombo->currentIndex() == 0)
    {
        BackgroundPage.ArrangementCombo->setCurrentIndex(1);
    }
 
-       fprintf(stderr, "Changed background image to `%s`...\n", pathname.toAscii().data());
+       modified();
 }
 
 void   ConfigWidget::desktopSelected(int index)

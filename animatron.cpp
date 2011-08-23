@@ -152,7 +152,7 @@ void   Animatron:: save(KConfigGroup& Config)
 
 QWidget* Animatron::createConfigurationInterface(QWidget* parent)
 {
-       pConfigWidget = new ConfigWidget(parent, mGlobalConfig);
+       pConfigWidget = new ConfigWidget(parent, mGlobalConfig, this);
      //connect(parent, SIGNAL(destroyed(QObject*)), this, SLOT(disposeConfigurationInterface()));
 
        return pConfigWidget;
