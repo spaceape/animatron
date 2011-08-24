@@ -326,6 +326,8 @@ void   Cell::render(QPainter* dev)
               break;
 
        }
+
+       resync = false;
    }
 }
 
@@ -427,7 +429,6 @@ void   Firefly::_notify_cell_created(Cell* pcell)
        tail = pcell;
 
      ++cc;
-     //printf("Cells = %d | [%p] life=%.4f\n", cc, pcell, pcell->getLife());
 }
 
 void   Firefly::_notify_cell_expired(Cell* pcell)
@@ -445,7 +446,6 @@ void   Firefly::_notify_cell_expired(Cell* pcell)
        delete pcell;
 
      --cc;
-     //printf("Cells = %d\n", cc);
 }
 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 

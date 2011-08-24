@@ -459,7 +459,7 @@ void   RemRuleMenu::hit(char* const text)
 void   RemRuleMenu::showing()
 {
        clear();
-       addAction(new DesktopRule(this, "Too lazy to edit the rules by hand?", KIcon("emoticon"), ""));
+       addAction(new DesktopRule(this, "Pull a large asteroid towards Earth...", KIcon("plasma"), ""));
 }
 
 void   RemRuleMenu::hiding()
