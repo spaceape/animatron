@@ -170,7 +170,6 @@ void   Animatron::hard_set(bool value)
 {
        fprintf(stderr, "Hard set=%d\n", value);
        Act.setEnabled(value);
-       mScene.setActive(Act);
 }
 
 void   Animatron::soft_set(bool value)

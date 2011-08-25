@@ -362,6 +362,7 @@ void   DesktopSwitch::setEnabled(bool value)
            clear();
          //suspendall = false;
          //suspendcurrent = false;
+           emit set( false );
            fprintf(stderr, "DS offline\n");
        }
    }

@@ -43,6 +43,13 @@
        uint  Thingy::base;
        uint  Thingy::lock = Thingy::ENA_ALL;
 
+       Thingy::Thingy()
+{
+}
+
+       Thingy::~Thingy()
+{
+}
 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
        const int Scene::MAX_FIREFLIES;
@@ -234,17 +241,17 @@ void   Cell::spinup()
 {
        int   k = rand() % base;
 
-  if  (k < 0x0a)
+  if  (k < 10)
   {
-       symbol[0] = 0x30 + k;
+       symbol[0] = '0' + k;
   }    else
   {
-       if (k < 0x2a)
+       if (k < 36)
        {
-           symbol[0] = 0x37 + k;
+           symbol[0] = 'A' - 10 + k;
        }   else
        {
-           symbol[0] = 0x43 + k;
+           symbol[0] = 'a' - 36 + k;
        }
   }
 }

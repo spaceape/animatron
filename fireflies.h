@@ -54,6 +54,8 @@ class Thingy
  static    const uint ENA_ALL = 0xffffffff;
  static    const uint ENA_SPAWNING = 1;
  public:
+           Thingy();
+ virtual   ~Thingy();
  virtual   bool sync(float dt) = 0;
  virtual   void render(QPainter* dev) = 0;
 
