@@ -3,7 +3,7 @@ Animatron plasma wallpaper for KDE4.x
 1. Description
 Animatron is an animated plasma wallpaper plugin for KDE4. It draws fast streams of random text
 on top of a colored or graphic background. The streams fade out at a different rate and
-occasionaly spawn into fresh new ones, making your desktop look very cinematic and interesting.
+occasionally spawn into fresh new ones, making your desktop look very cinematic and interesting.
 
 2. Guide
 Due to a fast rate at which the background needs to be refreshed, the performance drop is quite
@@ -11,11 +11,10 @@ significant and you sometimes can't afford the wasted flops underneath your acti
 For this purpose, Animatron includes functionality to stop the animations and free resources
 when nobody is looking at it.
 ...No, not really, but hopefuly, close enough :) For each desktop, it allows you to specify a
-set of simple rules for which to disable itself. A "rule" is actually either an application
-name (like "google-chrome" or "firefox" or "amarok" - which means that Animatron will suspend
-animations while that app is running) or a symbolic notation for some other feature, like
-("*" - means "always stay disabled", "#" - means "always stay enabled", or "?15" - suspend
-when number of running apps reaches 15).
+set of simple rules for which to disable itself. A "rule" actually consists of either an
+application name (like "google-chrome" or "firefox" or "amarok" - which means that Animatron
+will suspend animations while that app is running) or a symbolic notation for some other
+feature, like ("*" - means "always stay disabled", "#" - means "always stay enabled".
 
 Example rules:
 
@@ -25,27 +24,40 @@ smplayer gnome-mplayer kaffeine vlc
 
 First one is useful to set for "All Desktops" and it will disable Animatron when you're
 watching a movie.
-Second one will disable Animatron if at least one application is running on that desktop.
+Second one will disable Animatron if at least one application is running on that desktop. You
+can specify any number you wish after the '?', it will disable when number of open windows
+reaches that number. 
 
-When animations are stopped, Animatron looks and behaves like an everyday image (or color)
-wallpaper, and as soon as you close the blacklisted app (or apps) or switch to a desktop that
-allows it, the ASCII madness resumes shortly.
+When animations are stopped, Animatron behaves like an everyday image (or color) wallpaper,
+and as soon as you close the blacklisted app (or apps) or switch to a desktop that 
+doesn't restrict it, the ASCII madness shortly resumes.
 
 3. Config options
-Font, Color, Grid - style and number of positions
+Font, Color, Grid - style and grid size
+BackgroundColor - not there yet :) Although performance-wise it is far more advantageous to
+fill the background with a color instead of an image, i don't actually think i've seen
+anyone since 1993 using a plain color for background - and never other than black; anyways,
+is not like i'm lazy or anything, i'll add this thing if anyone really begs for it :P
 Bins - a give-or-take number for how many streams can there be on screen at a time
 Base - sets up a range for the random number generator; Base 16 means that it will spit out
 characters from '0' to 'F'.
 Arrangement - at the moment it offers a choice of whether to use an image as background or
-not; If you select a background image and you want to use it, make sure you've set the 
-arrangement to "Center".
+use a black bg; If you select a background image and you want to use it, make sure you've
+set the arrangement to "Center".
+Rules - where you type the desired rules for the desktop you see highlighted in the desktop
+selector; most often a rule consists of an application name (a window name, to be specific);
+if the app in question is running on that particular desktop, you can use the dropdown near
+the [+] button to add it to 'Rules', or to check if the name you typed is correct; the [-]
+button is just a dummy atm;
+Open, GetNewStuff - acquire images to use as backgrounds; might want to read a KDE guide if
+you're not familiar with these particular dialogs.
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 Build instructions:
 
 cd <where_your_source_dir_is>
 mkdir -p build && cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=`kde4-config --prefix` -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake .. -DCMAKE_INSTALL_PREFIX=`kde4-config --prefix`
 make
 sudo make install
 
@@ -59,7 +71,7 @@ Repository:
 https://github.com/spaceape/animatron
 
 Latest stable version on branch 'stable'
-Latest dev version on branch master
+Latest dev version on branch 'master' - i'll try my best to keep this reasonably stable as well
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 Changelog:
@@ -74,13 +86,13 @@ v 0.1
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 BUGS:
-* sometimes, especially on slow computers, animation doesn't enable when it's supposed to (like
-  it misses the desktop-switch and window-close events); opening and closing the config dialog
-  fixes the issue. [rare]
 * sometimes the "Desktops" widget in config doesn't init properly, it looks dead and you can't
   click on it. [rare]
-* popup menu on "Add Rule" button leaks memory [just when you pop it]
+* popup menu on "Add Rule" button leaks some memory [just when you pop it]
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 Enjoy,
 spaceape
+
+P.S. Suggestions and questions welcome at
+     http://kde-look.org/content/show.php/Animatron?content=144287
